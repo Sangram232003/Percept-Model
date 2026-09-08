@@ -2804,12 +2804,20 @@ def home():
                 "decision_function"
             ):
 
-                decision =
-                    float(
-                        model.decision_function(
-                            features
-                        )[0]
-                    )
+                # ------------------------------------------------
+            # PERCEPTRON SCORE
+            # ------------------------------------------------
+
+            if hasattr(
+                model,
+                "decision_function"
+            ):
+
+                decision = float(model.decision_function(features)[0])
+
+                # Convert decision score into a
+                # probability-like visual score.
+                #
 
                 # Convert decision score into a
                 # probability-like visual score.
