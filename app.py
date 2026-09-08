@@ -5,7 +5,7 @@ import os
 app = Flask(__name__)
 
 # ============================================================
-# LOAD MODEL
+# LOAD PERCEPTRON MODEL
 # ============================================================
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -18,7 +18,7 @@ model = joblib.load(MODEL_PATH)
 # HTML
 # ============================================================
 
-HTML = r"""
+HTML = """
 <!DOCTYPE html>
 <html lang="en">
 
@@ -63,9 +63,9 @@ HTML = r"""
         }
 
 
-        /* =========================
+        /* ====================================================
            BACKGROUND GRID
-        ========================= */
+        ==================================================== */
 
         body::before {
             content: "";
@@ -90,28 +90,28 @@ HTML = r"""
         }
 
 
-        /* =========================
-           GLOW ORBS
-        ========================= */
+        /* ====================================================
+           GLOWING ORBS
+        ==================================================== */
 
         .orb {
             position: fixed;
             border-radius: 50%;
-            filter: blur(5px);
             pointer-events: none;
+            filter: blur(5px);
             z-index: -4;
         }
 
         .orb1 {
-            width: 230px;
-            height: 230px;
+            width: 240px;
+            height: 240px;
 
-            left: -70px;
-            top: 12%;
+            left: -80px;
+            top: 10%;
 
-            background: rgba(0, 255, 255, 0.13);
+            background: rgba(0, 255, 255, 0.12);
 
-            animation: float1 8s ease-in-out infinite;
+            animation: floatOne 8s ease-in-out infinite;
         }
 
         .orb2 {
@@ -121,24 +121,24 @@ HTML = r"""
             right: -100px;
             top: 35%;
 
-            background: rgba(168, 85, 247, 0.14);
+            background: rgba(168, 85, 247, 0.13);
 
-            animation: float2 10s ease-in-out infinite;
+            animation: floatTwo 10s ease-in-out infinite;
         }
 
         .orb3 {
             width: 190px;
             height: 190px;
 
-            bottom: -60px;
             left: 40%;
+            bottom: -60px;
 
-            background: rgba(236, 72, 153, 0.12);
+            background: rgba(236, 72, 153, 0.11);
 
-            animation: float3 9s ease-in-out infinite;
+            animation: floatThree 9s ease-in-out infinite;
         }
 
-        @keyframes float1 {
+        @keyframes floatOne {
 
             0%, 100% {
                 transform: translate(0, 0);
@@ -149,7 +149,7 @@ HTML = r"""
             }
         }
 
-        @keyframes float2 {
+        @keyframes floatTwo {
 
             0%, 100% {
                 transform: translate(0, 0);
@@ -160,7 +160,7 @@ HTML = r"""
             }
         }
 
-        @keyframes float3 {
+        @keyframes floatThree {
 
             0%, 100% {
                 transform: translate(0, 0);
@@ -172,9 +172,9 @@ HTML = r"""
         }
 
 
-        /* =========================
+        /* ====================================================
            PAGE
-        ========================= */
+        ==================================================== */
 
         .page {
             min-height: 100vh;
@@ -187,9 +187,9 @@ HTML = r"""
         }
 
 
-        /* =========================
+        /* ====================================================
            HEADER
-        ========================= */
+        ==================================================== */
 
         .badge {
             width: fit-content;
@@ -238,10 +238,10 @@ HTML = r"""
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
 
-            animation: gradient 5s linear infinite;
+            animation: gradientMove 5s linear infinite;
         }
 
-        @keyframes gradient {
+        @keyframes gradientMove {
 
             0% {
                 background-position: 0%;
@@ -263,9 +263,9 @@ HTML = r"""
         }
 
 
-        /* =========================
+        /* ====================================================
            MAIN CARD
-        ========================= */
+        ==================================================== */
 
         .card {
             position: relative;
@@ -320,9 +320,9 @@ HTML = r"""
         }
 
 
-        /* =========================
+        /* ====================================================
            INPUT GRID
-        ========================= */
+        ==================================================== */
 
         .input-grid {
             display: grid;
@@ -397,9 +397,9 @@ HTML = r"""
         }
 
 
-        /* =========================
+        /* ====================================================
            INPUT
-        ========================= */
+        ==================================================== */
 
         input {
             width: 100%;
@@ -443,9 +443,9 @@ HTML = r"""
         }
 
 
-        /* =========================
+        /* ====================================================
            METERS
-        ========================= */
+        ==================================================== */
 
         .meter {
             margin-top: 18px;
@@ -502,9 +502,9 @@ HTML = r"""
         }
 
 
-        /* =========================
+        /* ====================================================
            BUTTON
-        ========================= */
+        ==================================================== */
 
         .button-area {
             text-align: center;
@@ -580,11 +580,9 @@ HTML = r"""
             position: absolute;
 
             top: -60%;
-
             left: -100%;
 
             width: 60%;
-
             height: 220%;
 
             background: rgba(255,255,255,0.25);
@@ -606,9 +604,9 @@ HTML = r"""
         }
 
 
-        /* =========================
+        /* ====================================================
            ERROR
-        ========================= */
+        ==================================================== */
 
         .error {
             padding: 15px 20px;
@@ -627,14 +625,14 @@ HTML = r"""
         }
 
 
-        /* =========================
+        /* ====================================================
            RESULT
-        ========================= */
+        ==================================================== */
 
         .result {
             margin-top: 35px;
 
-            padding: 32px;
+            padding: 35px;
 
             border-radius: 25px;
 
@@ -675,10 +673,10 @@ HTML = r"""
         }
 
         .result-icon {
-            width: 80px;
-            height: 80px;
+            width: 85px;
+            height: 85px;
 
-            margin: 0 auto 18px;
+            margin: 0 auto 20px;
 
             border-radius: 50%;
 
@@ -687,7 +685,7 @@ HTML = r"""
             align-items: center;
             justify-content: center;
 
-            font-size: 34px;
+            font-size: 38px;
 
             font-weight: bold;
         }
@@ -698,7 +696,7 @@ HTML = r"""
             background: rgba(52,211,153,0.12);
 
             box-shadow:
-                0 0 35px rgba(52,211,153,0.2);
+                0 0 40px rgba(52,211,153,0.25);
         }
 
         .unplaced .result-icon {
@@ -707,27 +705,29 @@ HTML = r"""
             background: rgba(248,113,113,0.12);
 
             box-shadow:
-                0 0 35px rgba(248,113,113,0.2);
+                0 0 40px rgba(248,113,113,0.25);
         }
 
         .result h2 {
-            font-size: 34px;
+            font-size: 38px;
 
-            letter-spacing: 2px;
+            letter-spacing: 3px;
 
-            margin-bottom: 10px;
+            margin-bottom: 12px;
         }
 
         .result p {
             color: #8993aa;
 
             font-size: 14px;
+
+            line-height: 1.6;
         }
 
 
-        /* =========================
+        /* ====================================================
            DETAILS
-        ========================= */
+        ==================================================== */
 
         .details {
             display: grid;
@@ -738,11 +738,11 @@ HTML = r"""
 
             max-width: 550px;
 
-            margin: 25px auto 0;
+            margin: 28px auto 0;
         }
 
         .detail {
-            padding: 17px;
+            padding: 18px;
 
             border-radius: 15px;
 
@@ -770,9 +770,9 @@ HTML = r"""
         }
 
 
-        /* =========================
+        /* ====================================================
            SCAN OVERLAY
-        ========================= */
+        ==================================================== */
 
         .scan-overlay {
             position: fixed;
@@ -787,8 +787,8 @@ HTML = r"""
             background:
                 radial-gradient(
                     circle,
-                    rgba(20,25,65,0.7),
-                    rgba(2,4,15,0.97)
+                    rgba(20,25,65,0.72),
+                    rgba(2,4,15,0.98)
                 );
 
             backdrop-filter: blur(12px);
@@ -929,7 +929,6 @@ HTML = r"""
 
             0%, 100% {
                 transform: translateY(-110px);
-
                 opacity: 0;
             }
 
@@ -939,7 +938,6 @@ HTML = r"""
 
             50% {
                 transform: translateY(110px);
-
                 opacity: 1;
             }
 
@@ -980,9 +978,9 @@ HTML = r"""
         }
 
 
-        /* =========================
+        /* ====================================================
            FOOTER
-        ========================= */
+        ==================================================== */
 
         footer {
             text-align: center;
@@ -997,9 +995,9 @@ HTML = r"""
         }
 
 
-        /* =========================
+        /* ====================================================
            MOBILE
-        ========================= */
+        ==================================================== */
 
         @media (max-width: 750px) {
 
@@ -1009,7 +1007,6 @@ HTML = r"""
 
             .card {
                 padding: 22px;
-
                 border-radius: 22px;
             }
 
@@ -1028,6 +1025,10 @@ HTML = r"""
             header h1 {
                 letter-spacing: -2px;
             }
+
+            .result h2 {
+                font-size: 30px;
+            }
         }
 
     </style>
@@ -1037,6 +1038,7 @@ HTML = r"""
 
 <body>
 
+
     <!-- BACKGROUND -->
 
     <div class="orb orb1"></div>
@@ -1044,7 +1046,7 @@ HTML = r"""
     <div class="orb orb3"></div>
 
 
-    <!-- SCANNING SCREEN -->
+    <!-- SCANNING OVERLAY -->
 
     <div
         class="scan-overlay"
@@ -1074,7 +1076,7 @@ HTML = r"""
     </div>
 
 
-    <!-- PAGE -->
+    <!-- MAIN PAGE -->
 
     <div class="page">
 
@@ -1101,12 +1103,13 @@ HTML = r"""
             </header>
 
 
-            <!-- CARD -->
+            <!-- MAIN CARD -->
 
             <div
                 class="card"
                 id="mainCard"
             >
+
 
                 {% if error %}
 
@@ -1152,7 +1155,7 @@ HTML = r"""
                                 min="0"
                                 max="10"
                                 step="0.01"
-                                placeholder="Example: 8.00"
+                                placeholder="Example: 8.50"
                                 value="{{ cgpa }}"
                                 required
                             >
@@ -1208,7 +1211,7 @@ HTML = r"""
                                 min="0"
                                 max="100"
                                 step="0.01"
-                                placeholder="Example: 79.88"
+                                placeholder="Example: 90"
                                 value="{{ resume_score }}"
                                 required
                             >
@@ -1317,6 +1320,7 @@ HTML = r"""
 
                 {% endif %}
 
+
             </div>
 
 
@@ -1324,14 +1328,15 @@ HTML = r"""
                 NEUROHIRE AI • MACHINE LEARNING PLACEMENT PREDICTION
             </footer>
 
+
         </div>
 
     </div>
 
 
-    <!-- =====================================================
+    <!-- ====================================================
          JAVASCRIPT
-    ====================================================== -->
+    ==================================================== -->
 
     <script>
 
@@ -1369,7 +1374,7 @@ HTML = r"""
                     Math.min(10, value)
                 );
 
-            let percentage =
+            const percentage =
                 (value / 10) * 100;
 
             cgpaFill.style.width =
@@ -1536,7 +1541,7 @@ HTML = r"""
 
 
 # ============================================================
-# HOME PAGE
+# HOME ROUTE
 # ============================================================
 
 @app.route("/", methods=["GET"])
@@ -1554,7 +1559,7 @@ def home():
 
 
 # ============================================================
-# PREDICTION ROUTE
+# PREDICT ROUTE
 # ============================================================
 
 @app.route("/predict", methods=["POST"])
@@ -1562,14 +1567,12 @@ def predict():
 
     try:
 
-        # ----------------------------------------------------
-        # GET USER INPUT
-        # ----------------------------------------------------
-
+        # Get CGPA
         cgpa = float(
             request.form.get("cgpa", "")
         )
 
+        # Get Resume Score
         resume_score = float(
             request.form.get("resume_score", "")
         )
@@ -1606,12 +1609,11 @@ def predict():
 
 
         # ----------------------------------------------------
-        # MODEL FEATURES
+        # MODEL INPUT
+        # ----------------------------------------------------
+        # Exact order:
         #
-        # Your Perceptron expects:
-        #
-        # 1. cgpa
-        # 2. resume_score
+        # [cgpa, resume_score]
         # ----------------------------------------------------
 
         features = [
@@ -1620,7 +1622,7 @@ def predict():
 
 
         # ----------------------------------------------------
-        # PREDICTION
+        # PERCEPTRON PREDICTION
         # ----------------------------------------------------
 
         prediction = model.predict(features)[0]
@@ -1630,30 +1632,25 @@ def predict():
         # PLACEMENT RESULT
         #
         # Assumption:
-        #
-        # 1 = Placed
-        # 0 = Unplaced
+        # 1 = PLACED
+        # 0 = UNPLACED
         # ----------------------------------------------------
 
         if int(prediction) == 1:
 
             result = "PLACED"
-
             result_class = "placed"
-
             result_icon = "✓"
 
         else:
 
             result = "UNPLACED"
-
             result_class = "unplaced"
-
             result_icon = "×"
 
 
         # ----------------------------------------------------
-        # SHOW RESULT
+        # RETURN RESULT
         # ----------------------------------------------------
 
         return render_template_string(
@@ -1694,7 +1691,7 @@ def predict():
 
 
 # ============================================================
-# RUN APPLICATION
+# RUN
 # ============================================================
 
 if __name__ == "__main__":
