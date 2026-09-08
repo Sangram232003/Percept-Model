@@ -6,11 +6,10 @@ import math
 app = Flask(__name__)
 
 # ============================================================
-# LOAD MODEL
+# LOAD PERCEPTRON MODEL
 # ============================================================
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
 MODEL_PATH = os.path.join(BASE_DIR, "Perceptron.pkl")
 
 model = joblib.load(MODEL_PATH)
@@ -22,2721 +21,1626 @@ model = joblib.load(MODEL_PATH)
 
 HTML = r"""
 <!DOCTYPE html>
-
 <html lang="en">
 
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<meta charset="UTF-8">
+    <title>NeuroHire AI | Perceptron Predictor</title>
 
-<meta name="viewport"
-      content="width=device-width, initial-scale=1.0">
+    <style>
 
-<title>NeuroHire AI</title>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
+        html {
+            scroll-behavior: smooth;
+        }
 
-<style>
+        body {
+            min-height: 100vh;
+            font-family: Arial, Helvetica, sans-serif;
+            color: white;
+            overflow-x: hidden;
 
-/* =========================================================
-   RESET
-========================================================= */
+            background:
+                radial-gradient(circle at 15% 20%, rgba(0, 255, 255, 0.16), transparent 28%),
+                radial-gradient(circle at 85% 25%, rgba(168, 85, 247, 0.18), transparent 30%),
+                radial-gradient(circle at 50% 90%, rgba(236, 72, 153, 0.14), transparent 28%),
+                #050816;
+        }
+
+        /* ====================================================
+           BACKGROUND GRID
+        ==================================================== */
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
 
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
+            background-image:
+                linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
 
+            background-size: 50px 50px;
 
-/* =========================================================
-   BODY
-========================================================= */
+            mask-image: linear-gradient(
+                to bottom,
+                transparent,
+                black 20%,
+                black 80%,
+                transparent
+            );
+
+            pointer-events: none;
+            z-index: -3;
+        }
+
+
+        /* ====================================================
+           GLOWING ORBS
+        ==================================================== */
+
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(3px);
+            pointer-events: none;
+            z-index: -2;
+        }
+
+        .orb-one {
+            width: 240px;
+            height: 240px;
+
+            background: rgba(0, 255, 255, 0.14);
+
+            top: 8%;
+            left: -70px;
+
+            animation: floatOne 8s ease-in-out infinite;
+        }
+
+        .orb-two {
+            width: 280px;
+            height: 280px;
+
+            background: rgba(168, 85, 247, 0.14);
+
+            right: -90px;
+            top: 35%;
+
+            animation: floatTwo 10s ease-in-out infinite;
+        }
+
+        .orb-three {
+            width: 200px;
+            height: 200px;
+
+            background: rgba(236, 72, 153, 0.12);
+
+            bottom: -50px;
+            left: 35%;
+
+            animation: floatThree 9s ease-in-out infinite;
+        }
+
+        @keyframes floatOne {
+            0%, 100% {
+                transform: translate(0, 0);
+            }
+
+            50% {
+                transform: translate(70px, 100px);
+            }
+        }
+
+        @keyframes floatTwo {
+            0%, 100% {
+                transform: translate(0, 0);
+            }
+
+            50% {
+                transform: translate(-90px, -70px);
+            }
+        }
+
+        @keyframes floatThree {
+            0%, 100% {
+                transform: translate(0, 0);
+            }
+
+            50% {
+                transform: translate(80px, -80px);
+            }
+        }
+
+
+        /* ====================================================
+           PARTICLES
+        ==================================================== */
+
+        .particles {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .particle {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.55);
+            box-shadow: 0 0 12px rgba(0,255,255,0.7);
+            animation: particleFloat linear infinite;
+        }
+
+        .p1 { left: 10%; top: 30%; animation-duration: 9s; }
+        .p2 { left: 22%; top: 70%; animation-duration: 12s; }
+        .p3 { left: 38%; top: 18%; animation-duration: 10s; }
+        .p4 { left: 55%; top: 80%; animation-duration: 14s; }
+        .p5 { left: 70%; top: 22%; animation-duration: 11s; }
+        .p6 { left: 84%; top: 65%; animation-duration: 8s; }
+        .p7 { left: 92%; top: 15%; animation-duration: 13s; }
+        .p8 { left: 47%; top: 45%; animation-duration: 10s; }
+
+        @keyframes particleFloat {
+            0% {
+                transform: translateY(0) scale(1);
+                opacity: 0.2;
+            }
+
+            50% {
+                transform: translateY(-80px) scale(1.5);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(-160px) scale(0.5);
+                opacity: 0;
+            }
+        }
+
+
+        /* ====================================================
+           MAIN CONTAINER
+        ==================================================== */
+
+        .page {
+            width: 100%;
+            min-height: 100vh;
+            padding: 45px 20px 70px;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: auto;
+        }
+
+
+        /* ====================================================
+           HEADER
+        ==================================================== */
+
+        .top-badge {
+            width: fit-content;
+            margin: 0 auto 18px;
+
+            padding: 9px 18px;
+
+            border: 1px solid rgba(0,255,255,0.3);
+            border-radius: 999px;
+
+            background: rgba(0,255,255,0.06);
+
+            color: #7df9ff;
+
+            font-size: 12px;
+            font-weight: bold;
+            letter-spacing: 2px;
+
+            box-shadow:
+                0 0 20px rgba(0,255,255,0.08);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 42px;
+        }
+
+        .header h1 {
+            font-size: clamp(38px, 7vw, 76px);
+            line-height: 0.95;
+            font-weight: 900;
+            letter-spacing: -3px;
+
+            background: linear-gradient(
+                90deg,
+                #67e8f9,
+                #a78bfa,
+                #f472b6,
+                #67e8f9
+            );
+
+            background-size: 300% auto;
+
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+
+            animation: gradientMove 5s linear infinite;
+        }
+
+        @keyframes gradientMove {
+            0% {
+                background-position: 0% center;
+            }
+
+            100% {
+                background-position: 300% center;
+            }
+        }
+
+        .header p {
+            margin-top: 20px;
+            color: #a7b0c8;
+            font-size: 16px;
+            line-height: 1.7;
+        }
+
+
+        /* ====================================================
+           MAIN CARD
+        ==================================================== */
 
-body {
+        .main-card {
+            position: relative;
+
+            padding: 42px;
+
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 30px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    rgba(255,255,255,0.09),
+                    rgba(255,255,255,0.025)
+                );
 
-    min-height: 100vh;
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
 
-    font-family:
-        Inter,
-        "Segoe UI",
-        Arial,
-        sans-serif;
+            box-shadow:
+                0 30px 100px rgba(0,0,0,0.45),
+                inset 0 1px 0 rgba(255,255,255,0.08);
 
-    color: #ffffff;
+            overflow: hidden;
+
+            transition: transform 0.15s ease;
+        }
+
+        .main-card::before {
+            content: "";
+            position: absolute;
+
+            top: 0;
+            left: 8%;
+
+            width: 84%;
+            height: 1px;
+
+            background: linear-gradient(
+                90deg,
+                transparent,
+                #67e8f9,
+                #a78bfa,
+                #f472b6,
+                transparent
+            );
 
-    overflow-x: hidden;
+            box-shadow: 0 0 25px #67e8f9;
+        }
 
-    background:
-        radial-gradient(
-            circle at 10% 15%,
-            rgba(0, 255, 220, 0.18),
-            transparent 27%
-        ),
 
-        radial-gradient(
-            circle at 90% 15%,
-            rgba(150, 80, 255, 0.22),
-            transparent 30%
-        ),
+        /* ====================================================
+           INPUT GRID
+        ==================================================== */
 
-        radial-gradient(
-            circle at 50% 100%,
-            rgba(255, 45, 145, 0.15),
-            transparent 32%
-        ),
+        .input-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
 
-        #070711;
+        .input-card {
+            padding: 27px;
 
-}
+            border-radius: 22px;
 
+            background: rgba(3, 7, 25, 0.55);
 
-/* =========================================================
-   GRID BACKGROUND
-========================================================= */
+            border: 1px solid rgba(255,255,255,0.08);
 
-body::before {
+            position: relative;
 
-    content: "";
+            overflow: hidden;
 
-    position: fixed;
+            transition:
+                transform 0.3s ease,
+                border-color 0.3s ease,
+                box-shadow 0.3s ease;
+        }
 
-    inset: 0;
+        .input-card:hover {
+            transform: translateY(-5px);
 
-    z-index: -20;
+            border-color: rgba(103,232,249,0.4);
 
-    pointer-events: none;
+            box-shadow:
+                0 15px 45px rgba(0,0,0,0.25),
+                0 0 30px rgba(103,232,249,0.06);
+        }
 
-    background-image:
+        .input-number {
+            width: 38px;
+            height: 38px;
 
-        linear-gradient(
-            rgba(255,255,255,0.025) 1px,
-            transparent 1px
-        ),
+            display: flex;
+            align-items: center;
+            justify-content: center;
 
-        linear-gradient(
-            90deg,
-            rgba(255,255,255,0.025) 1px,
-            transparent 1px
-        );
+            border-radius: 12px;
 
-    background-size: 48px 48px;
+            background: linear-gradient(
+                135deg,
+                #06b6d4,
+                #6366f1
+            );
 
-    mask-image:
-        linear-gradient(
-            to bottom,
-            black 0%,
-            transparent 90%
-        );
+            font-weight: 900;
+            font-size: 14px;
 
-}
+            margin-bottom: 20px;
 
+            box-shadow:
+                0 8px 25px rgba(6,182,212,0.25);
+        }
 
-/* =========================================================
-   MOVING LIGHT ORBS
-========================================================= */
+        .input-card:nth-child(2) .input-number {
+            background: linear-gradient(
+                135deg,
+                #a855f7,
+                #ec4899
+            );
 
-.light-orb {
+            box-shadow:
+                0 8px 25px rgba(168,85,247,0.25);
+        }
 
-    position: fixed;
+        .input-card h3 {
+            font-size: 20px;
+            margin-bottom: 7px;
+        }
 
-    border-radius: 50%;
+        .input-card p {
+            color: #8791aa;
+            font-size: 13px;
+            margin-bottom: 22px;
+        }
 
-    pointer-events: none;
 
-    filter: blur(90px);
+        /* ====================================================
+           INPUT
+        ==================================================== */
 
-    z-index: -10;
+        .input-wrapper {
+            position: relative;
+        }
 
-}
+        .input-wrapper input {
+            width: 100%;
 
+            padding: 17px 18px;
 
-.orb-1 {
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 15px;
 
-    width: 320px;
-    height: 320px;
+            background: rgba(255,255,255,0.045);
 
-    left: -120px;
-    top: -80px;
+            color: white;
 
-    background: #00ffe0;
+            outline: none;
 
-    opacity: 0.11;
+            font-size: 18px;
+            font-weight: bold;
 
-    animation:
-        orbMove1 12s
-        ease-in-out
-        infinite alternate;
+            transition: 0.3s ease;
+        }
 
-}
+        .input-wrapper input::placeholder {
+            color: #5f6880;
+        }
 
+        .input-wrapper input:focus {
+            border-color: #67e8f9;
 
-.orb-2 {
+            box-shadow:
+                0 0 0 3px rgba(103,232,249,0.08),
+                0 0 30px rgba(103,232,249,0.1);
+        }
 
-    width: 360px;
-    height: 360px;
+        .input-card:nth-child(2) input:focus {
+            border-color: #c084fc;
 
-    right: -130px;
-    top: 20%;
+            box-shadow:
+                0 0 0 3px rgba(192,132,252,0.08),
+                0 0 30px rgba(192,132,252,0.1);
+        }
 
-    background: #8957ff;
 
-    opacity: 0.13;
+        /* ====================================================
+           RANGE METER
+        ==================================================== */
 
-    animation:
-        orbMove2 15s
-        ease-in-out
-        infinite alternate;
+        .meter {
+            margin-top: 18px;
+        }
 
-}
+        .meter-top {
+            display: flex;
+            justify-content: space-between;
 
+            color: #68738e;
 
-.orb-3 {
+            font-size: 11px;
+            margin-bottom: 8px;
+        }
 
-    width: 300px;
-    height: 300px;
+        .meter-track {
+            height: 6px;
 
-    left: 30%;
-    bottom: -150px;
+            border-radius: 999px;
 
-    background: #ff268d;
+            background: rgba(255,255,255,0.06);
 
-    opacity: 0.10;
+            overflow: hidden;
+        }
 
-    animation:
-        orbMove3 11s
-        ease-in-out
-        infinite alternate;
+        .meter-fill {
+            width: 0%;
+            height: 100%;
 
-}
+            border-radius: 999px;
 
+            background: linear-gradient(
+                90deg,
+                #06b6d4,
+                #22d3ee
+            );
 
-@keyframes orbMove1 {
+            box-shadow:
+                0 0 15px rgba(34,211,238,0.7);
 
-    from {
-        transform:
-            translate(0,0)
-            scale(1);
-    }
+            transition: width 0.4s ease;
+        }
 
-    to {
-        transform:
-            translate(260px,190px)
-            scale(1.35);
-    }
+        .input-card:nth-child(2) .meter-fill {
+            background: linear-gradient(
+                90deg,
+                #a855f7,
+                #ec4899
+            );
 
-}
+            box-shadow:
+                0 0 15px rgba(236,72,153,0.6);
+        }
 
 
-@keyframes orbMove2 {
+        /* ====================================================
+           BUTTON
+        ==================================================== */
 
-    from {
-        transform:
-            translate(0,0);
-    }
+        .predict-area {
+            margin-top: 35px;
+            text-align: center;
+        }
 
-    to {
-        transform:
-            translate(-220px,120px)
-            scale(1.2);
-    }
+        .predict-btn {
+            position: relative;
 
-}
+            border: none;
+            outline: none;
 
+            padding: 18px 48px;
 
-@keyframes orbMove3 {
+            border-radius: 999px;
 
-    from {
-        transform:
-            translate(0,0);
-    }
+            color: white;
 
-    to {
-        transform:
-            translate(170px,-130px)
-            scale(1.3);
-    }
+            font-size: 15px;
+            font-weight: 900;
 
-}
+            letter-spacing: 1px;
 
+            cursor: pointer;
 
-/* =========================================================
-   PARTICLES
-========================================================= */
+            overflow: hidden;
 
-.particles {
+            background:
+                linear-gradient(
+                    90deg,
+                    #06b6d4,
+                    #6366f1,
+                    #a855f7,
+                    #ec4899,
+                    #06b6d4
+                );
 
-    position: fixed;
+            background-size: 300% auto;
 
-    inset: 0;
+            box-shadow:
+                0 12px 40px rgba(99,102,241,0.3),
+                0 0 30px rgba(6,182,212,0.15);
 
-    pointer-events: none;
+            animation: buttonGradient 4s linear infinite;
 
-    z-index: -5;
+            transition:
+                transform 0.2s ease,
+                box-shadow 0.2s ease;
+        }
 
-}
+        @keyframes buttonGradient {
+            0% {
+                background-position: 0% center;
+            }
 
+            100% {
+                background-position: 300% center;
+            }
+        }
 
-.particle {
+        .predict-btn:hover {
+            transform: translateY(-3px) scale(1.02);
 
-    position: absolute;
+            box-shadow:
+                0 18px 55px rgba(99,102,241,0.45),
+                0 0 45px rgba(6,182,212,0.2);
+        }
 
-    width: 4px;
-    height: 4px;
+        .predict-btn:active {
+            transform: scale(0.97);
+        }
 
-    border-radius: 50%;
+        .predict-btn::after {
+            content: "";
 
-    background: #00ffe0;
+            position: absolute;
 
-    box-shadow:
-        0 0 8px #00ffe0,
-        0 0 18px #00ffe0;
+            top: -50%;
+            left: -100%;
 
-    animation:
-        particleRise
-        linear
-        infinite;
+            width: 70%;
+            height: 200%;
 
-}
+            transform: rotate(25deg);
 
+            background: rgba(255,255,255,0.28);
 
-@keyframes particleRise {
+            animation: shine 3s ease-in-out infinite;
+        }
 
-    0% {
+        @keyframes shine {
+            0% {
+                left: -100%;
+            }
 
-        transform:
-            translateY(110vh)
-            scale(0.4);
+            35%, 100% {
+                left: 150%;
+            }
+        }
 
-        opacity: 0;
+        .small-note {
+            margin-top: 15px;
+            color: #606b84;
+            font-size: 11px;
+        }
 
-    }
 
-    15% {
-        opacity: 1;
-    }
+        /* ====================================================
+           ERROR
+        ==================================================== */
 
-    85% {
-        opacity: 1;
-    }
+        .error {
+            margin-bottom: 25px;
 
-    100% {
+            padding: 16px 20px;
 
-        transform:
-            translateY(-10vh)
-            scale(1.3);
+            border-radius: 15px;
 
-        opacity: 0;
+            background: rgba(239,68,68,0.1);
 
-    }
+            border: 1px solid rgba(239,68,68,0.3);
 
-}
+            color: #fca5a5;
 
+            text-align: center;
 
-/* =========================================================
-   PAGE
-========================================================= */
+            font-size: 14px;
+        }
 
-.page {
 
-    width: 94%;
+        /* ====================================================
+           RESULT
+        ==================================================== */
 
-    max-width: 1050px;
+        .result {
+            margin-top: 35px;
 
-    margin: auto;
+            padding: 30px;
 
-    padding:
-        48px 0 40px;
+            border-radius: 25px;
 
-}
+            text-align: center;
 
+            border: 1px solid rgba(255,255,255,0.1);
 
-/* =========================================================
-   HEADER
-========================================================= */
+            background: rgba(255,255,255,0.035);
 
-.header {
+            animation: resultAppear 0.7s ease forwards;
+        }
 
-    text-align: center;
+        @keyframes resultAppear {
+            from {
+                opacity: 0;
+                transform: translateY(25px) scale(0.96);
+            }
 
-    margin-bottom: 35px;
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
 
-}
+        .result-icon {
+            width: 78px;
+            height: 78px;
 
+            margin: 0 auto 18px;
 
-.online {
+            border-radius: 50%;
 
-    display: inline-flex;
+            display: flex;
+            align-items: center;
+            justify-content: center;
 
-    align-items: center;
+            font-size: 32px;
 
-    gap: 9px;
+            animation: iconPulse 2s ease-in-out infinite;
+        }
 
-    padding:
-        8px 17px;
+        @keyframes iconPulse {
+            0%, 100% {
+                transform: scale(1);
+            }
 
-    border-radius: 50px;
+            50% {
+                transform: scale(1.08);
+            }
+        }
 
-    border:
-        1px solid
-        rgba(0,255,220,0.30);
+        .result.positive {
+            border-color: rgba(52,211,153,0.35);
 
-    background:
-        rgba(0,255,220,0.055);
+            box-shadow:
+                0 0 50px rgba(52,211,153,0.08);
+        }
 
-    color: #61ffe8;
+        .result.positive .result-icon {
+            background: rgba(16,185,129,0.13);
+            color: #34d399;
 
-    font-size: 10px;
+            box-shadow:
+                0 0 35px rgba(52,211,153,0.2);
+        }
 
-    font-weight: 900;
+        .result.negative {
+            border-color: rgba(248,113,113,0.35);
 
-    letter-spacing: 2px;
+            box-shadow:
+                0 0 50px rgba(248,113,113,0.07);
+        }
 
-    box-shadow:
-        0 0 25px
-        rgba(0,255,220,0.08);
+        .result.negative .result-icon {
+            background: rgba(239,68,68,0.13);
+            color: #f87171;
 
-}
+            box-shadow:
+                0 0 35px rgba(248,113,113,0.18);
+        }
 
+        .result h2 {
+            font-size: 30px;
+            margin-bottom: 10px;
+        }
 
-.online-dot {
+        .result p {
+            color: #8d97ae;
+            font-size: 14px;
+        }
 
-    width: 8px;
-    height: 8px;
+        .score-box {
+            max-width: 520px;
+            margin: 25px auto 0;
+        }
 
-    border-radius: 50%;
+        .score-header {
+            display: flex;
+            justify-content: space-between;
 
-    background: #00ffd5;
+            margin-bottom: 9px;
 
-    box-shadow:
-        0 0 14px #00ffd5;
+            font-size: 12px;
+            color: #8d97ae;
+        }
 
-    animation:
-        onlinePulse 1.1s infinite;
+        .score-header strong {
+            color: white;
+        }
 
-}
+        .score-track {
+            height: 10px;
 
+            border-radius: 999px;
 
-@keyframes onlinePulse {
+            background: rgba(255,255,255,0.06);
 
-    50% {
+            overflow: hidden;
+        }
 
-        transform:
-            scale(1.6);
+        .score-fill {
+            height: 100%;
 
-        opacity:
-            0.4;
+            width: {{ confidence }}%;
 
-    }
+            border-radius: 999px;
 
-}
+            background:
+                linear-gradient(
+                    90deg,
+                    #06b6d4,
+                    #6366f1,
+                    #a855f7,
+                    #ec4899
+                );
 
+            box-shadow:
+                0 0 20px rgba(168,85,247,0.45);
 
-.header h1 {
+            animation: scoreLoad 1.2s ease;
+        }
 
-    margin-top: 20px;
+        @keyframes scoreLoad {
+            from {
+                width: 0%;
+            }
 
-    font-size:
-        clamp(48px, 8vw, 84px);
+            to {
+                width: {{ confidence }}%;
+            }
+        }
 
-    line-height:
-        0.92;
 
-    font-weight: 950;
+        /* ====================================================
+           INFO ROW
+        ==================================================== */
 
-    letter-spacing:
-        -5px;
+        .info-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
 
-    background:
+            max-width: 520px;
 
-        linear-gradient(
-            90deg,
-            #00ffe0,
-            #665cff,
-            #ff3e9e,
-            #ffb347,
-            #00ffe0
-        );
+            margin: 22px auto 0;
+        }
 
-    background-size:
-        400%;
+        .info-box {
+            padding: 15px;
 
-    -webkit-background-clip:
-        text;
+            border-radius: 15px;
 
-    -webkit-text-fill-color:
-        transparent;
+            background: rgba(255,255,255,0.035);
 
-    animation:
-        headingFlow
-        7s
-        linear
-        infinite;
+            border: 1px solid rgba(255,255,255,0.06);
+        }
 
-}
+        .info-box span {
+            display: block;
 
+            color: #69738b;
 
-@keyframes headingFlow {
+            font-size: 10px;
 
-    to {
-        background-position:
-            400%;
-    }
+            text-transform: uppercase;
 
-}
+            letter-spacing: 1px;
 
+            margin-bottom: 6px;
+        }
 
-.header p {
+        .info-box strong {
+            font-size: 17px;
+        }
 
-    margin-top:
-        18px;
 
-    color:
-        #9292a8;
+        /* ====================================================
+           SCANNING OVERLAY
+        ==================================================== */
 
-    font-size:
-        15px;
+        .scan-overlay {
+            position: fixed;
+            inset: 0;
 
-}
+            display: none;
+            align-items: center;
+            justify-content: center;
 
+            background:
+                radial-gradient(
+                    circle,
+                    rgba(12,18,50,0.72),
+                    rgba(2,4,15,0.97)
+                );
 
-/* =========================================================
-   MAIN CARD
-========================================================= */
+            backdrop-filter: blur(10px);
 
-.card {
+            z-index: 9999;
+        }
 
-    position: relative;
+        .scan-overlay.active {
+            display: flex;
+        }
 
-    padding:
-        34px;
+        .scanner {
+            position: relative;
 
-    border-radius:
-        30px;
+            width: 260px;
+            height: 260px;
 
-    background:
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
 
-        linear-gradient(
-            145deg,
-            rgba(255,255,255,0.085),
-            rgba(255,255,255,0.025)
-        );
+        .ring {
+            position: absolute;
 
-    border:
-        1px solid
-        rgba(255,255,255,0.11);
+            border-radius: 50%;
 
-    backdrop-filter:
-        blur(28px);
+            border: 1px solid rgba(103,232,249,0.5);
 
-    -webkit-backdrop-filter:
-        blur(28px);
+            animation: ringRotate 3s linear infinite;
+        }
 
-    box-shadow:
+        .ring-one {
+            width: 250px;
+            height: 250px;
 
-        0 40px 120px
-        rgba(0,0,0,0.55),
+            border-top-color: #67e8f9;
+            border-bottom-color: #a78bfa;
+        }
 
-        inset
-        0 1px 0
-        rgba(255,255,255,0.08);
+        .ring-two {
+            width: 190px;
+            height: 190px;
 
-    transition:
-        transform 0.2s ease;
+            border-left-color: #ec4899;
+            border-right-color: #67e8f9;
 
-}
+            animation-direction: reverse;
+            animation-duration: 2s;
+        }
 
+        .ring-three {
+            width: 135px;
+            height: 135px;
 
-/* =========================================================
-   TOP LASER
-========================================================= */
+            border-top-color: #f472b6;
+            border-right-color: #67e8f9;
 
-.card::before {
+            animation-duration: 1.5s;
+        }
 
-    content: "";
+        @keyframes ringRotate {
+            from {
+                transform: rotate(0deg);
+            }
 
-    position: absolute;
+            to {
+                transform: rotate(360deg);
+            }
+        }
 
-    top: 0;
-    left: 8%;
+        .ai-core {
+            width: 75px;
+            height: 75px;
 
-    width: 84%;
-    height: 2px;
+            border-radius: 50%;
 
-    background:
+            display: flex;
+            align-items: center;
+            justify-content: center;
 
-        linear-gradient(
-            90deg,
-            transparent,
-            #00ffe0,
-            #6d5cff,
-            #ff3e9e,
-            #ffb347,
-            transparent
-        );
+            font-size: 28px;
 
-    box-shadow:
-        0 0 25px #6d5cff;
+            background:
+                radial-gradient(
+                    circle,
+                    #ffffff,
+                    #67e8f9 20%,
+                    #6366f1 55%,
+                    #a855f7 100%
+                );
 
-}
+            color: #070a1c;
 
+            box-shadow:
+                0 0 25px #67e8f9,
+                0 0 60px rgba(168,85,247,0.7);
 
-/* =========================================================
-   CARD HEADER
-========================================================= */
+            animation: corePulse 1s ease-in-out infinite;
+        }
 
-.card-header {
+        @keyframes corePulse {
+            0%, 100% {
+                transform: scale(0.92);
+                box-shadow:
+                    0 0 20px #67e8f9,
+                    0 0 40px rgba(168,85,247,0.5);
+            }
 
-    display: flex;
+            50% {
+                transform: scale(1.08);
+                box-shadow:
+                    0 0 35px #67e8f9,
+                    0 0 80px rgba(168,85,247,0.8);
+            }
+        }
 
-    align-items:
-        center;
+        .scan-line {
+            position: absolute;
 
-    justify-content:
-        space-between;
+            width: 280px;
+            height: 2px;
 
-    margin-bottom:
-        28px;
+            background:
+                linear-gradient(
+                    90deg,
+                    transparent,
+                    #67e8f9,
+                    white,
+                    #a855f7,
+                    transparent
+                );
 
-}
+            box-shadow:
+                0 0 15px #67e8f9;
 
+            animation: scanLine 1.5s ease-in-out infinite;
+        }
 
-.card-title {
+        @keyframes scanLine {
+            0%, 100% {
+                transform: translateY(-105px);
+                opacity: 0;
+            }
 
-    display: flex;
+            20% {
+                opacity: 1;
+            }
 
-    align-items:
-        center;
+            50% {
+                transform: translateY(105px);
+                opacity: 1;
+            }
 
-    gap:
-        13px;
+            80% {
+                opacity: 0;
+            }
+        }
 
-}
+        .scan-text {
+            position: absolute;
 
+            top: calc(50% + 155px);
 
-.ai-symbol {
+            text-align: center;
 
-    width: 46px;
-    height: 46px;
+            width: 100%;
 
-    display: flex;
+            font-size: 14px;
 
-    align-items:
-        center;
+            font-weight: bold;
 
-    justify-content:
-        center;
+            letter-spacing: 3px;
 
-    border-radius:
-        14px;
+            color: #c4f7ff;
 
-    font-size:
-        22px;
+            animation: textBlink 0.8s infinite alternate;
+        }
 
-    background:
+        @keyframes textBlink {
+            from {
+                opacity: 0.45;
+            }
 
-        linear-gradient(
-            135deg,
-            #00d9bb,
-            #7655ff
-        );
+            to {
+                opacity: 1;
+            }
+        }
 
-    box-shadow:
 
-        0 0 28px
-        rgba(0,255,220,0.20);
+        /* ====================================================
+           FOOTER
+        ==================================================== */
 
-    animation:
-        aiFloat 3s
-        ease-in-out
-        infinite;
+        footer {
+            text-align: center;
 
-}
+            margin-top: 35px;
 
+            color: #4e5870;
 
-@keyframes aiFloat {
+            font-size: 11px;
 
-    50% {
+            letter-spacing: 1px;
+        }
 
-        transform:
-            translateY(-5px)
-            rotate(4deg);
 
-    }
+        /* ====================================================
+           RESPONSIVE
+        ==================================================== */
 
-}
+        @media (max-width: 750px) {
 
+            .page {
+                padding: 30px 15px 50px;
+            }
 
-.title-main {
+            .main-card {
+                padding: 22px;
+                border-radius: 22px;
+            }
 
-    font-size:
-        17px;
+            .input-grid {
+                grid-template-columns: 1fr;
+            }
 
-    font-weight:
-        850;
+            .header {
+                margin-bottom: 28px;
+            }
 
-}
+            .header h1 {
+                letter-spacing: -2px;
+            }
 
+            .header p {
+                font-size: 14px;
+            }
 
-.title-sub {
+            .predict-btn {
+                width: 100%;
+            }
 
-    margin-top:
-        4px;
+            .info-row {
+                grid-template-columns: 1fr;
+            }
+        }
 
-    color:
-        #6d6d83;
-
-    font-size:
-        11px;
-
-}
-
-
-.model-chip {
-
-    padding:
-        8px 12px;
-
-    border-radius:
-        9px;
-
-    background:
-        rgba(255,255,255,0.045);
-
-    border:
-        1px solid
-        rgba(255,255,255,0.08);
-
-    color:
-        #77778d;
-
-    font-size:
-        10px;
-
-    letter-spacing:
-        1px;
-
-}
-
-
-/* =========================================================
-   INPUT GRID
-========================================================= */
-
-.input-grid {
-
-    display: grid;
-
-    grid-template-columns:
-        repeat(2, 1fr);
-
-    gap:
-        20px;
-
-}
-
-
-/* =========================================================
-   INPUT CARD
-========================================================= */
-
-.input-card {
-
-    position:
-        relative;
-
-    padding:
-        23px;
-
-    border-radius:
-        20px;
-
-    background:
-        rgba(5,5,18,0.62);
-
-    border:
-        1px solid
-        rgba(255,255,255,0.08);
-
-    overflow:
-        hidden;
-
-    transition:
-        0.35s;
-
-}
-
-
-.input-card:hover {
-
-    transform:
-        translateY(-6px);
-
-    border-color:
-        rgba(0,255,220,0.34);
-
-    box-shadow:
-        0 18px 40px
-        rgba(0,0,0,0.25);
-
-}
-
-
-.input-card::before {
-
-    content: "";
-
-    position: absolute;
-
-    width: 100px;
-    height: 100px;
-
-    right:
-        -60px;
-
-    top:
-        -60px;
-
-    border-radius:
-        50%;
-
-    background:
-        #00ffe0;
-
-    filter:
-        blur(45px);
-
-    opacity:
-        0;
-
-    transition:
-        0.4s;
-
-}
-
-
-.input-card:hover::before {
-
-    opacity:
-        0.13;
-
-}
-
-
-/* =========================================================
-   LABEL
-========================================================= */
-
-.label {
-
-    display:
-        flex;
-
-    align-items:
-        center;
-
-    gap:
-        11px;
-
-    margin-bottom:
-        14px;
-
-}
-
-
-.icon {
-
-    width:
-        38px;
-
-    height:
-        38px;
-
-    display:
-        flex;
-
-    align-items:
-        center;
-
-    justify-content:
-        center;
-
-    border-radius:
-        11px;
-
-    font-size:
-        18px;
-
-}
-
-
-.cgpa-icon {
-
-    color:
-        #00ffe0;
-
-    background:
-        rgba(0,255,220,0.08);
-
-}
-
-
-.resume-icon {
-
-    color:
-        #ff4ba5;
-
-    background:
-        rgba(255,60,150,0.09);
-
-}
-
-
-.label-name {
-
-    font-size:
-        13px;
-
-    font-weight:
-        850;
-
-}
-
-
-.label-help {
-
-    color:
-        #64647b;
-
-    font-size:
-        10px;
-
-    margin-top:
-        3px;
-
-}
-
-
-/* =========================================================
-   INPUT
-========================================================= */
-
-input {
-
-    width:
-        100%;
-
-    padding:
-        15px 16px;
-
-    border-radius:
-        13px;
-
-    outline:
-        none;
-
-    border:
-        1px solid
-        rgba(255,255,255,0.10);
-
-    background:
-        rgba(255,255,255,0.045);
-
-    color:
-        #ffffff;
-
-    font-size:
-        16px;
-
-    font-weight:
-        700;
-
-    transition:
-        0.3s;
-
-}
-
-
-input::placeholder {
-
-    color:
-        #525267;
-
-}
-
-
-input:focus {
-
-    border-color:
-        #00ffe0;
-
-    box-shadow:
-
-        0 0 0 3px
-        rgba(0,255,220,0.06),
-
-        0 0 30px
-        rgba(0,255,220,0.10);
-
-}
-
-
-/* =========================================================
-   SCORE BAR
-========================================================= */
-
-.score-bar {
-
-    height:
-        6px;
-
-    margin-top:
-        14px;
-
-    border-radius:
-        30px;
-
-    overflow:
-        hidden;
-
-    background:
-        rgba(255,255,255,0.06);
-
-}
-
-
-.score-fill {
-
-    height:
-        100%;
-
-    width:
-        0%;
-
-    border-radius:
-        30px;
-
-    transition:
-        width 0.45s ease;
-
-}
-
-
-.cgpa-fill {
-
-    background:
-        linear-gradient(
-            90deg,
-            #00ffe0,
-            #00a8ff
-        );
-
-    box-shadow:
-        0 0 15px
-        rgba(0,255,220,0.5);
-
-}
-
-
-.resume-fill {
-
-    background:
-        linear-gradient(
-            90deg,
-            #ff3c9a,
-            #815cff
-        );
-
-    box-shadow:
-        0 0 15px
-        rgba(255,60,150,0.45);
-
-}
-
-
-/* =========================================================
-   BUTTON
-========================================================= */
-
-.action {
-
-    text-align:
-        center;
-
-    margin-top:
-        30px;
-
-}
-
-
-.predict-btn {
-
-    position:
-        relative;
-
-    width:
-        370px;
-
-    max-width:
-        100%;
-
-    padding:
-        19px 28px;
-
-    border:
-        none;
-
-    border-radius:
-        17px;
-
-    cursor:
-        pointer;
-
-    overflow:
-        hidden;
-
-    color:
-        white;
-
-    font-size:
-        14px;
-
-    font-weight:
-        950;
-
-    letter-spacing:
-        2px;
-
-    background:
-
-        linear-gradient(
-            100deg,
-            #00cdb3,
-            #6658ff,
-            #ff328e,
-            #ff9f43,
-            #00cdb3
-        );
-
-    background-size:
-        400%;
-
-    animation:
-        buttonFlow
-        6s linear infinite;
-
-    box-shadow:
-
-        0 15px 45px
-        rgba(0,0,0,0.35),
-
-        0 0 30px
-        rgba(0,220,190,0.16);
-
-    transition:
-        0.3s;
-
-}
-
-
-@keyframes buttonFlow {
-
-    to {
-        background-position:
-            400%;
-    }
-
-}
-
-
-.predict-btn:hover {
-
-    transform:
-        translateY(-5px)
-        scale(1.025);
-
-    box-shadow:
-
-        0 20px 60px
-        rgba(0,0,0,0.45),
-
-        0 0 55px
-        rgba(115,80,255,0.35);
-
-}
-
-
-.predict-btn:active {
-
-    transform:
-        scale(0.94);
-
-}
-
-
-.predict-btn::before {
-
-    content: "";
-
-    position:
-        absolute;
-
-    top:
-        0;
-
-    left:
-        -100%;
-
-    width:
-        55%;
-
-    height:
-        100%;
-
-    transform:
-        skewX(-20deg);
-
-    background:
-
-        linear-gradient(
-            100deg,
-            transparent,
-            rgba(255,255,255,0.55),
-            transparent
-        );
-
-}
-
-
-.predict-btn:hover::before {
-
-    animation:
-        buttonShine
-        0.8s;
-
-}
-
-
-@keyframes buttonShine {
-
-    to {
-        left:
-            150%;
-    }
-
-}
-
-
-/* =========================================================
-   RESULT
-========================================================= */
-
-.result {
-
-    margin-top:
-        30px;
-
-    padding:
-        32px;
-
-    text-align:
-        center;
-
-    border-radius:
-        25px;
-
-    animation:
-        resultReveal
-        0.9s
-        cubic-bezier(.16,1,.3,1);
-
-}
-
-
-.result.pass {
-
-    border:
-        1px solid
-        rgba(0,255,160,0.38);
-
-    background:
-
-        radial-gradient(
-            circle at 50% 0%,
-            rgba(0,255,160,0.13),
-            transparent 65%
-        ),
-
-        rgba(0,255,160,0.025);
-
-}
-
-
-.result.fail {
-
-    border:
-        1px solid
-        rgba(255,60,100,0.38);
-
-    background:
-
-        radial-gradient(
-            circle at 50% 0%,
-            rgba(255,60,100,0.13),
-            transparent 65%
-        ),
-
-        rgba(255,60,100,0.025);
-
-}
-
-
-@keyframes resultReveal {
-
-    0% {
-
-        opacity:
-            0;
-
-        transform:
-            translateY(50px)
-            scale(0.78)
-            rotateX(18deg);
-
-    }
-
-    70% {
-
-        transform:
-            translateY(-6px)
-            scale(1.03);
-
-    }
-
-    100% {
-
-        opacity:
-            1;
-
-        transform:
-            translateY(0)
-            scale(1)
-            rotateX(0);
-
-    }
-
-}
-
-
-.result-orb {
-
-    width:
-        105px;
-
-    height:
-        105px;
-
-    margin:
-        0 auto 20px;
-
-    display:
-        flex;
-
-    align-items:
-        center;
-
-    justify-content:
-        center;
-
-    border-radius:
-        50%;
-
-    font-size:
-        45px;
-
-    animation:
-        resultPulse
-        1.4s
-        ease-in-out
-        infinite alternate;
-
-}
-
-
-.pass .result-orb {
-
-    border:
-        2px solid
-        #00ff9d;
-
-    background:
-        rgba(0,255,150,0.07);
-
-    box-shadow:
-
-        0 0 35px
-        rgba(0,255,150,0.28),
-
-        inset
-        0 0 30px
-        rgba(0,255,150,0.08);
-
-}
-
-
-.fail .result-orb {
-
-    border:
-        2px solid
-        #ff416c;
-
-    background:
-        rgba(255,50,90,0.07);
-
-    box-shadow:
-
-        0 0 35px
-        rgba(255,50,90,0.28),
-
-        inset
-        0 0 30px
-        rgba(255,50,90,0.08);
-
-}
-
-
-@keyframes resultPulse {
-
-    from {
-        transform:
-            scale(1);
-    }
-
-    to {
-        transform:
-            scale(1.09);
-    }
-
-}
-
-
-.result h2 {
-
-    font-size:
-        30px;
-
-    margin-bottom:
-        9px;
-
-}
-
-
-.result p {
-
-    color:
-        #9292a8;
-
-}
-
-
-/* =========================================================
-   CONFIDENCE
-========================================================= */
-
-.confidence {
-
-    max-width:
-        500px;
-
-    margin:
-        26px auto 0;
-
-    text-align:
-        left;
-
-}
-
-
-.confidence-head {
-
-    display:
-        flex;
-
-    justify-content:
-        space-between;
-
-    margin-bottom:
-        9px;
-
-    color:
-        #77778e;
-
-    font-size:
-        11px;
-
-    letter-spacing:
-        1px;
-
-}
-
-
-.confidence-track {
-
-    height:
-        9px;
-
-    border-radius:
-        20px;
-
-    overflow:
-        hidden;
-
-    background:
-        rgba(255,255,255,0.07);
-
-}
-
-
-.confidence-fill {
-
-    width:
-        {{ confidence }}%;
-
-    height:
-        100%;
-
-    border-radius:
-        20px;
-
-    background:
-
-        linear-gradient(
-            90deg,
-            #00ffe0,
-            #725cff,
-            #ff3d9a
-        );
-
-    box-shadow:
-        0 0 18px
-        rgba(120,80,255,0.55);
-
-    animation:
-        confidenceGrow
-        1.4s ease-out;
-
-}
-
-
-@keyframes confidenceGrow {
-
-    from {
-        width:
-            0%;
-    }
-
-}
-
-
-/* =========================================================
-   AI SCANNING SCREEN
-========================================================= */
-
-.scan-screen {
-
-    position:
-        fixed;
-
-    inset:
-        0;
-
-    z-index:
-        99999;
-
-    display:
-        none;
-
-    align-items:
-        center;
-
-    justify-content:
-        center;
-
-    flex-direction:
-        column;
-
-    background:
-        rgba(3,3,14,0.95);
-
-    backdrop-filter:
-        blur(18px);
-
-}
-
-
-.scan-screen.active {
-
-    display:
-        flex;
-
-}
-
-
-/* =========================================================
-   NEURAL AI CORE
-========================================================= */
-
-.ai-core {
-
-    position:
-        relative;
-
-    width:
-        190px;
-
-    height:
-        190px;
-
-    display:
-        flex;
-
-    align-items:
-        center;
-
-    justify-content:
-        center;
-
-}
-
-
-.core {
-
-    width:
-        68px;
-
-    height:
-        68px;
-
-    display:
-        flex;
-
-    align-items:
-        center;
-
-    justify-content:
-        center;
-
-    border-radius:
-        50%;
-
-    font-size:
-        25px;
-
-    background:
-
-        radial-gradient(
-            circle,
-            #ffffff 0%,
-            #00ffe0 20%,
-            #715cff 55%,
-            transparent 72%
-        );
-
-    box-shadow:
-
-        0 0 30px
-        #00ffe0,
-
-        0 0 70px
-        rgba(110,90,255,0.65);
-
-    animation:
-        corePulse
-        0.9s
-        infinite alternate;
-
-}
-
-
-@keyframes corePulse {
-
-    from {
-        transform:
-            scale(0.78);
-    }
-
-    to {
-        transform:
-            scale(1.12);
-    }
-
-}
-
-
-.ring {
-
-    position:
-        absolute;
-
-    border-radius:
-        50%;
-
-    border:
-        2px solid
-        transparent;
-
-}
-
-
-.ring-a {
-
-    width:
-        105px;
-
-    height:
-        105px;
-
-    border-top-color:
-        #00ffe0;
-
-    border-right-color:
-        #00ffe0;
-
-    animation:
-        spin
-        0.9s linear infinite;
-
-}
-
-
-.ring-b {
-
-    width:
-        140px;
-
-    height:
-        140px;
-
-    border-left-color:
-        #ff3c9a;
-
-    border-bottom-color:
-        #715cff;
-
-    animation:
-        spinReverse
-        1.5s linear infinite;
-
-}
-
-
-.ring-c {
-
-    width:
-        178px;
-
-    height:
-        178px;
-
-    border-top-color:
-        #ffb347;
-
-    border-bottom-color:
-        #00ffe0;
-
-    opacity:
-        0.6;
-
-    animation:
-        spin
-        2.3s linear infinite;
-
-}
-
-
-@keyframes spin {
-
-    to {
-        transform:
-            rotate(360deg);
-    }
-
-}
-
-
-@keyframes spinReverse {
-
-    to {
-        transform:
-            rotate(-360deg);
-    }
-
-}
-
-
-/* =========================================================
-   SCANNING LINE
-========================================================= */
-
-.scan-line {
-
-    position:
-        absolute;
-
-    width:
-        220px;
-
-    height:
-        2px;
-
-    background:
-
-        linear-gradient(
-            90deg,
-            transparent,
-            #00ffe0,
-            #ffffff,
-            #00ffe0,
-            transparent
-        );
-
-    box-shadow:
-        0 0 20px
-        #00ffe0;
-
-    animation:
-        scanLine
-        1.2s
-        ease-in-out
-        infinite;
-
-}
-
-
-@keyframes scanLine {
-
-    0% {
-
-        transform:
-            translateY(-95px);
-
-        opacity:
-            0;
-
-    }
-
-    20% {
-        opacity:
-            1;
-    }
-
-    80% {
-        opacity:
-            1;
-    }
-
-    100% {
-
-        transform:
-            translateY(95px);
-
-        opacity:
-            0;
-
-    }
-
-}
-
-
-/* =========================================================
-   SCAN TEXT
-========================================================= */
-
-.scan-title {
-
-    margin-top:
-        42px;
-
-    color:
-        #00ffe0;
-
-    font-size:
-        16px;
-
-    font-weight:
-        950;
-
-    letter-spacing:
-        4px;
-
-    animation:
-        scanBlink
-        0.8s
-        infinite alternate;
-
-}
-
-
-.scan-subtitle {
-
-    margin-top:
-        10px;
-
-    color:
-        #696981;
-
-    font-size:
-        12px;
-
-}
-
-
-.scan-dots {
-
-    margin-top:
-        16px;
-
-    color:
-        #755cff;
-
-    letter-spacing:
-        6px;
-
-}
-
-
-@keyframes scanBlink {
-
-    from {
-        opacity:
-            0.3;
-    }
-
-    to {
-        opacity:
-            1;
-    }
-
-}
-
-
-/* =========================================================
-   FOOTER
-========================================================= */
-
-.footer {
-
-    text-align:
-        center;
-
-    margin-top:
-        25px;
-
-    color:
-        #505065;
-
-    font-size:
-        10px;
-
-    letter-spacing:
-        1.5px;
-
-}
-
-
-/* =========================================================
-   MOBILE
-========================================================= */
-
-@media(max-width: 720px) {
-
-    .page {
-
-        padding-top:
-            25px;
-
-    }
-
-
-    .card {
-
-        padding:
-            20px;
-
-        border-radius:
-            23px;
-
-    }
-
-
-    .input-grid {
-
-        grid-template-columns:
-            1fr;
-
-    }
-
-
-    .model-chip {
-
-        display:
-            none;
-
-    }
-
-
-    .header h1 {
-
-        letter-spacing:
-            -3px;
-
-    }
-
-
-    .predict-btn {
-
-        width:
-            100%;
-
-    }
-
-
-    .card-header {
-
-        margin-bottom:
-            22px;
-
-    }
-
-
-    .result h2 {
-
-        font-size:
-            24px;
-
-    }
-
-}
-
-</style>
-
+    </style>
 </head>
 
 
 <body>
 
+    <!-- BACKGROUND -->
+    <div class="orb orb-one"></div>
+    <div class="orb orb-two"></div>
+    <div class="orb orb-three"></div>
 
-<!-- =======================================================
-     BACKGROUND
-======================================================= -->
-
-<div class="light-orb orb-1"></div>
-<div class="light-orb orb-2"></div>
-<div class="light-orb orb-3"></div>
-
-
-<div class="particles">
-
-    <div class="particle"
-         style="left:4%; animation-duration:11s;"></div>
-
-    <div class="particle"
-         style="left:12%; animation-duration:8s;"></div>
-
-    <div class="particle"
-         style="left:22%; animation-duration:13s;"></div>
-
-    <div class="particle"
-         style="left:34%; animation-duration:10s;"></div>
-
-    <div class="particle"
-         style="left:47%; animation-duration:15s;"></div>
-
-    <div class="particle"
-         style="left:60%; animation-duration:9s;"></div>
-
-    <div class="particle"
-         style="left:73%; animation-duration:12s;"></div>
-
-    <div class="particle"
-         style="left:86%; animation-duration:8s;"></div>
-
-    <div class="particle"
-         style="left:95%; animation-duration:14s;"></div>
-
-</div>
+    <div class="particles">
+        <span class="particle p1"></span>
+        <span class="particle p2"></span>
+        <span class="particle p3"></span>
+        <span class="particle p4"></span>
+        <span class="particle p5"></span>
+        <span class="particle p6"></span>
+        <span class="particle p7"></span>
+        <span class="particle p8"></span>
+    </div>
 
 
-<!-- =======================================================
-     AI SCANNING SCREEN
-======================================================= -->
+    <!-- SCANNING OVERLAY -->
 
-<div
-    class="scan-screen"
-    id="scanScreen"
->
+    <div class="scan-overlay" id="scanOverlay">
 
+        <div class="scanner">
 
-    <div class="ai-core">
+            <div class="ring ring-one"></div>
+            <div class="ring ring-two"></div>
+            <div class="ring ring-three"></div>
 
-        <div class="ring ring-a"></div>
+            <div class="scan-line"></div>
 
-        <div class="ring ring-b"></div>
+            <div class="ai-core">
+                AI
+            </div>
 
-        <div class="ring ring-c"></div>
+        </div>
 
-        <div class="scan-line"></div>
-
-        <div class="core">
-
-            ✦
-
+        <div class="scan-text">
+            ANALYZING CANDIDATE...
         </div>
 
     </div>
 
 
-    <div class="scan-title">
+    <!-- MAIN PAGE -->
 
-        AI ANALYZING CANDIDATE
+    <div class="page">
 
-    </div>
+        <div class="container">
 
+            <!-- HEADER -->
 
-    <div class="scan-subtitle">
+            <div class="header">
 
-        Perceptron decision engine is processing your profile...
-
-    </div>
-
-
-    <div class="scan-dots">
-
-        ● ● ●
-
-    </div>
-
-
-</div>
-
-
-<!-- =======================================================
-     MAIN PAGE
-======================================================= -->
-
-<div class="page">
-
-
-    <!-- HEADER -->
-
-    <div class="header">
-
-
-        <div class="online">
-
-            <span class="online-dot"></span>
-
-            NEUROHIRE AI • SYSTEM ONLINE
-
-        </div>
-
-
-        <h1>
-
-            NeuroHire<br>AI
-
-        </h1>
-
-
-        <p>
-
-            Intelligent candidate prediction powered by machine learning.
-
-        </p>
-
-
-    </div>
-
-
-    <!-- ===================================================
-         MAIN CARD
-    =================================================== -->
-
-    <div
-        class="card"
-        id="mainCard"
-    >
-
-
-        <div class="card-header">
-
-
-            <div class="card-title">
-
-
-                <div class="ai-symbol">
-
-                    ✦
-
+                <div class="top-badge">
+                    ⚡ PERCEPTRON INTELLIGENCE SYSTEM
                 </div>
 
+                <h1>
+                    NeuroHire AI
+                </h1>
 
-                <div>
-
-                    <div class="title-main">
-
-                        Candidate Intelligence
-
-                    </div>
-
-
-                    <div class="title-sub">
-
-                        Enter performance metrics to generate a prediction
-
-                    </div>
-
-                </div>
-
+                <p>
+                    Intelligent candidate prediction powered by
+                    Machine Learning and Perceptron technology.
+                </p>
 
             </div>
 
 
-            <div class="model-chip">
+            <!-- MAIN CARD -->
 
-                PERCEPTRON MODEL
+            <div class="main-card" id="mainCard">
 
-            </div>
+                {% if error %}
 
-
-        </div>
-
-
-        <!-- =================================================
-             FORM
-        ================================================= -->
-
-        <form
-            method="POST"
-            id="predictionForm"
-        >
-
-
-            <div class="input-grid">
-
-
-                <!-- CGPA -->
-
-                <div class="input-card">
-
-
-                    <div class="label">
-
-
-                        <div class="icon cgpa-icon">
-
-                            🎓
-
-                        </div>
-
-
-                        <div>
-
-                            <div class="label-name">
-
-                                CGPA
-
-                            </div>
-
-
-                            <div class="label-help">
-
-                                Academic performance • 0 to 10
-
-                            </div>
-
-                        </div>
-
-
+                    <div class="error">
+                        ⚠ {{ error }}
                     </div>
-
-
-                    <input
-                        type="number"
-                        name="cgpa"
-                        id="cgpa"
-                        min="0"
-                        max="10"
-                        step="0.01"
-                        placeholder="e.g. 8.50"
-                        required
-                    >
-
-
-                    <div class="score-bar">
-
-                        <div
-                            class="score-fill cgpa-fill"
-                            id="cgpaFill"
-                        ></div>
-
-                    </div>
-
-
-                </div>
-
-
-                <!-- RESUME SCORE -->
-
-                <div class="input-card">
-
-
-                    <div class="label">
-
-
-                        <div class="icon resume-icon">
-
-                            📄
-
-                        </div>
-
-
-                        <div>
-
-                            <div class="label-name">
-
-                                Resume Score
-
-                            </div>
-
-
-                            <div class="label-help">
-
-                                Resume evaluation • 0 to 100
-
-                            </div>
-
-                        </div>
-
-
-                    </div>
-
-
-                    <input
-                        type="number"
-                        name="resume_score"
-                        id="resumeScore"
-                        min="0"
-                        max="100"
-                        step="0.01"
-                        placeholder="e.g. 82"
-                        required
-                    >
-
-
-                    <div class="score-bar">
-
-                        <div
-                            class="score-fill resume-fill"
-                            id="resumeFill"
-                        ></div>
-
-                    </div>
-
-
-                </div>
-
-
-            </div>
-
-
-            <!-- =================================================
-                 PREDICT BUTTON
-            ================================================= -->
-
-            <div class="action">
-
-
-                <button
-                    type="submit"
-                    class="predict-btn"
-                    id="predictBtn"
-                >
-
-                    <span id="buttonText">
-
-                        ✦ RUN AI PREDICTION
-
-                    </span>
-
-                </button>
-
-
-            </div>
-
-
-        </form>
-
-
-        <!-- =================================================
-             RESULT
-        ================================================= -->
-
-        {% if prediction is not none %}
-
-
-        <div
-            class="result
-            {% if prediction == 1 %}
-                pass
-            {% else %}
-                fail
-            {% endif %}"
-        >
-
-
-            <div class="result-orb">
-
-
-                {% if prediction == 1 %}
-
-                    🚀
-
-                {% else %}
-
-                    ⚠️
 
                 {% endif %}
 
 
+                <!-- FORM -->
+
+                <form
+                    method="POST"
+                    id="predictionForm"
+                    onsubmit="startScanning()"
+                >
+
+                    <div class="input-grid">
+
+
+                        <!-- CGPA -->
+
+                        <div class="input-card">
+
+                            <div class="input-number">
+                                01
+                            </div>
+
+                            <h3>
+                                Academic CGPA
+                            </h3>
+
+                            <p>
+                                Enter the candidate's CGPA.
+                            </p>
+
+                            <div class="input-wrapper">
+
+                                <input
+                                    type="number"
+                                    name="cgpa"
+                                    id="cgpa"
+                                    min="0"
+                                    max="10"
+                                    step="0.01"
+                                    placeholder="e.g. 8.50"
+                                    value="{{ cgpa }}"
+                                    required
+                                >
+
+                            </div>
+
+                            <div class="meter">
+
+                                <div class="meter-top">
+                                    <span>0</span>
+                                    <span id="cgpaValue">0 / 10</span>
+                                    <span>10</span>
+                                </div>
+
+                                <div class="meter-track">
+
+                                    <div
+                                        class="meter-fill"
+                                        id="cgpaFill"
+                                    ></div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- RESUME SCORE -->
+
+                        <div class="input-card">
+
+                            <div class="input-number">
+                                02
+                            </div>
+
+                            <h3>
+                                Resume Score
+                            </h3>
+
+                            <p>
+                                Enter the candidate's resume score.
+                            </p>
+
+                            <div class="input-wrapper">
+
+                                <input
+                                    type="number"
+                                    name="resume_score"
+                                    id="resumeScore"
+                                    min="0"
+                                    max="100"
+                                    step="0.01"
+                                    placeholder="e.g. 82"
+                                    value="{{ resume_score }}"
+                                    required
+                                >
+
+                            </div>
+
+                            <div class="meter">
+
+                                <div class="meter-top">
+                                    <span>0</span>
+                                    <span id="resumeValue">0 / 100</span>
+                                    <span>100</span>
+                                </div>
+
+                                <div class="meter-track">
+
+                                    <div
+                                        class="meter-fill"
+                                        id="resumeFill"
+                                    ></div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- BUTTON -->
+
+                    <div class="predict-area">
+
+                        <button
+                            type="submit"
+                            class="predict-btn"
+                            id="predictButton"
+                        >
+                            ✦ ANALYZE CANDIDATE
+                        </button>
+
+                        <div class="small-note">
+                            AI analysis usually completes in milliseconds
+                        </div>
+
+                    </div>
+
+                </form>
+
+
+                <!-- RESULT -->
+
+                {% if result %}
+
+                    <div class="result {{ result_class }}">
+
+                        <div class="result-icon">
+                            {{ result_icon }}
+                        </div>
+
+                        <h2>
+                            {{ result }}
+                        </h2>
+
+                        <p>
+                            Perceptron model analysis completed successfully.
+                        </p>
+
+
+                        <div class="score-box">
+
+                            <div class="score-header">
+
+                                <span>
+                                    Decision Strength
+                                </span>
+
+                                <strong>
+                                    {{ confidence }}%
+                                </strong>
+
+                            </div>
+
+                            <div class="score-track">
+
+                                <div class="score-fill"></div>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="info-row">
+
+                            <div class="info-box">
+
+                                <span>
+                                    CGPA
+                                </span>
+
+                                <strong>
+                                    {{ cgpa }}
+                                </strong>
+
+                            </div>
+
+                            <div class="info-box">
+
+                                <span>
+                                    Resume Score
+                                </span>
+
+                                <strong>
+                                    {{ resume_score }}
+                                </strong>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                {% endif %}
+
             </div>
 
 
-            {% if prediction == 1 %}
-
-
-                <h2>
-
-                    Positive Prediction
-
-                </h2>
-
-
-                <p>
-
-                    The Perceptron model classified this candidate as Class 1.
-
-                </p>
-
-
-            {% else %}
-
-
-                <h2>
-
-                    Negative Prediction
-
-                </h2>
-
-
-                <p>
-
-                    The Perceptron model classified this candidate as Class 0.
-
-                </p>
-
-
-            {% endif %}
-
-
-            {% if confidence is not none %}
-
-
-            <div class="confidence">
-
-
-                <div class="confidence-head">
-
-                    <span>
-
-                        MODEL SCORE
-
-                    </span>
-
-
-                    <span>
-
-                        {{ confidence }}%
-
-                    </span>
-
-                </div>
-
-
-                <div class="confidence-track">
-
-                    <div
-                        class="confidence-fill"
-                    ></div>
-
-                </div>
-
-
-            </div>
-
-
-            {% endif %}
-
+            <footer>
+                NEUROHIRE AI • PERCEPTRON MACHINE LEARNING SYSTEM
+            </footer>
 
         </div>
 
-
-        {% endif %}
-
-
     </div>
 
 
-    <div class="footer">
+    <!-- ====================================================
+         JAVASCRIPT
+    ==================================================== -->
 
-        POWERED BY SCIKIT-LEARN • PERCEPTRON • NEUROHIRE AI
+    <script>
 
-    </div>
+        const cgpaInput = document.getElementById("cgpa");
+        const resumeInput = document.getElementById("resumeScore");
 
+        const cgpaFill = document.getElementById("cgpaFill");
+        const resumeFill = document.getElementById("resumeFill");
 
-</div>
-
-
-<script>
-
-/* =========================================================
-   CGPA METER
-========================================================= */
-
-const cgpa =
-    document.getElementById("cgpa");
-
-const cgpaFill =
-    document.getElementById("cgpaFill");
+        const cgpaValue = document.getElementById("cgpaValue");
+        const resumeValue = document.getElementById("resumeValue");
 
 
-cgpa.addEventListener(
-    "input",
-    function() {
+        function updateCGPA() {
 
-        let value =
-            parseFloat(cgpa.value) || 0;
+            if (!cgpaInput) {
+                return;
+            }
 
-        let percentage =
-            Math.min(
-                Math.max(
-                    (value / 10) * 100,
-                    0
-                ),
-                100
-            );
+            let value = parseFloat(cgpaInput.value);
 
-        cgpaFill.style.width =
-            percentage + "%";
+            if (isNaN(value)) {
+                value = 0;
+            }
 
-    }
-);
+            value = Math.max(0, Math.min(10, value));
 
+            const percentage = (value / 10) * 100;
 
-/* =========================================================
-   RESUME SCORE METER
-========================================================= */
+            if (cgpaFill) {
+                cgpaFill.style.width = percentage + "%";
+            }
 
-const resumeScore =
-    document.getElementById("resumeScore");
-
-const resumeFill =
-    document.getElementById("resumeFill");
-
-
-resumeScore.addEventListener(
-    "input",
-    function() {
-
-        let value =
-            parseFloat(resumeScore.value) || 0;
-
-        let percentage =
-            Math.min(
-                Math.max(
-                    value,
-                    0
-                ),
-                100
-            );
-
-        resumeFill.style.width =
-            percentage + "%";
-
-    }
-);
-
-
-/* =========================================================
-   PREDICT BUTTON EFFECT
-========================================================= */
-
-const form =
-    document.getElementById(
-        "predictionForm"
-    );
-
-
-const button =
-    document.getElementById(
-        "predictBtn"
-    );
-
-
-const buttonText =
-    document.getElementById(
-        "buttonText"
-    );
-
-
-const scanScreen =
-    document.getElementById(
-        "scanScreen"
-    );
-
-
-form.addEventListener(
-    "submit",
-    function() {
-
-
-        /*
-         * Show full-screen
-         * AI scanning animation.
-         */
-
-        scanScreen.classList.add(
-            "active"
-        );
-
-
-        /*
-         * Prevent double click.
-         */
-
-        button.disabled =
-            true;
-
-
-        /*
-         * Change button text.
-         */
-
-        buttonText.innerHTML =
-            "◉  ANALYZING PROFILE...";
-
-
-    }
-);
-
-
-/* =========================================================
-   3D CARD MOUSE EFFECT
-========================================================= */
-
-const mainCard =
-    document.getElementById(
-        "mainCard"
-    );
-
-
-document.addEventListener(
-    "mousemove",
-    function(event) {
-
-
-        if (
-            window.innerWidth < 850
-        ) {
-
-            return;
-
+            if (cgpaValue) {
+                cgpaValue.textContent =
+                    value.toFixed(2) + " / 10";
+            }
         }
 
 
-        const x =
-            (
-                window.innerWidth / 2 -
-                event.clientX
-            ) / 150;
+        function updateResume() {
 
-
-        const y =
-            (
-                window.innerHeight / 2 -
-                event.clientY
-            ) / 150;
-
-
-        mainCard.style.transform =
-            `perspective(1400px)
-             rotateY(${x}deg)
-             rotateX(${-y}deg)`;
-
-
-    }
-);
-
-
-document.addEventListener(
-    "mouseleave",
-    function() {
-
-        mainCard.style.transform =
-            "perspective(1400px) rotateY(0deg) rotateX(0deg)";
-
-    }
-);
-
-
-/* =========================================================
-   INPUT FOCUS EFFECT
-========================================================= */
-
-document.querySelectorAll(
-    "input"
-).forEach(
-    function(input) {
-
-        input.addEventListener(
-            "focus",
-            function() {
-
-                this.closest(
-                    ".input-card"
-                ).style.transform =
-                    "translateY(-6px)";
-
+            if (!resumeInput) {
+                return;
             }
-        );
 
+            let value = parseFloat(resumeInput.value);
 
-        input.addEventListener(
-            "blur",
-            function() {
-
-                this.closest(
-                    ".input-card"
-                ).style.transform =
-                    "translateY(0)";
-
+            if (isNaN(value)) {
+                value = 0;
             }
-        );
 
-    }
-);
+            value = Math.max(0, Math.min(100, value));
 
-</script>
+            if (resumeFill) {
+                resumeFill.style.width = value + "%";
+            }
 
+            if (resumeValue) {
+                resumeValue.textContent =
+                    value.toFixed(0) + " / 100";
+            }
+        }
+
+
+        if (cgpaInput) {
+            cgpaInput.addEventListener(
+                "input",
+                updateCGPA
+            );
+
+            updateCGPA();
+        }
+
+
+        if (resumeInput) {
+            resumeInput.addEventListener(
+                "input",
+                updateResume
+            );
+
+            updateResume();
+        }
+
+
+        function startScanning() {
+
+            const cgpa = parseFloat(cgpaInput.value);
+            const resume = parseFloat(resumeInput.value);
+
+            if (
+                isNaN(cgpa) ||
+                isNaN(resume) ||
+                cgpa < 0 ||
+                cgpa > 10 ||
+                resume < 0 ||
+                resume > 100
+            ) {
+                return;
+            }
+
+            const overlay =
+                document.getElementById("scanOverlay");
+
+            const button =
+                document.getElementById("predictButton");
+
+            if (overlay) {
+                overlay.classList.add("active");
+            }
+
+            if (button) {
+                button.disabled = true;
+                button.innerHTML =
+                    "◉ ANALYZING CANDIDATE...";
+            }
+        }
+
+
+        /* ====================================================
+           MOUSE TILT EFFECT
+        ==================================================== */
+
+        const card =
+            document.getElementById("mainCard");
+
+        if (card) {
+
+            card.addEventListener(
+                "mousemove",
+                function(event) {
+
+                    if (window.innerWidth < 750) {
+                        return;
+                    }
+
+                    const rect =
+                        card.getBoundingClientRect();
+
+                    const x =
+                        event.clientX - rect.left;
+
+                    const y =
+                        event.clientY - rect.top;
+
+                    const centerX =
+                        rect.width / 2;
+
+                    const centerY =
+                        rect.height / 2;
+
+                    const rotateX =
+                        ((y - centerY) / centerY) * -1.2;
+
+                    const rotateY =
+                        ((x - centerX) / centerX) * 1.2;
+
+                    card.style.transform =
+                        "perspective(1200px) " +
+                        "rotateX(" + rotateX + "deg) " +
+                        "rotateY(" + rotateY + "deg)";
+                }
+            );
+
+
+            card.addEventListener(
+                "mouseleave",
+                function() {
+
+                    card.style.transform =
+                        "perspective(1200px) " +
+                        "rotateX(0deg) " +
+                        "rotateY(0deg)";
+                }
+            );
+
+        }
+
+    </script>
 
 </body>
 
@@ -2751,142 +1655,179 @@ document.querySelectorAll(
 @app.route("/", methods=["GET", "POST"])
 def home():
 
-    prediction = None
-    confidence = None
+    result = None
+    result_class = ""
+    result_icon = ""
+    confidence = 50.0
+
+    cgpa = ""
+    resume_score = ""
+    error = None
 
     if request.method == "POST":
 
         try:
 
             # ------------------------------------------------
-            # GET USER INPUT
+            # GET INPUT VALUES
             # ------------------------------------------------
 
-            cgpa = float(
-                request.form["cgpa"]
+            cgpa = float(request.form.get("cgpa", 0))
+            resume_score = float(
+                request.form.get("resume_score", 0)
             )
 
-            resume_score = float(
-                request.form["resume_score"]
-            )
+
+            # ------------------------------------------------
+            # VALIDATION
+            # ------------------------------------------------
+
+            if cgpa < 0 or cgpa > 10:
+
+                raise ValueError(
+                    "CGPA must be between 0 and 10."
+                )
+
+            if resume_score < 0 or resume_score > 100:
+
+                raise ValueError(
+                    "Resume Score must be between 0 and 100."
+                )
 
 
             # ------------------------------------------------
             # MODEL INPUT
             #
-            # EXACT ORDER EXPECTED BY MODEL:
+            # Exact feature order of your Perceptron:
             #
-            # cgpa
-            # resume_score
+            # 1. cgpa
+            # 2. resume_score
             # ------------------------------------------------
 
-            features = [[
-                cgpa,
-                resume_score
-            ]]
+            features = [
+                [cgpa, resume_score]
+            ]
 
 
             # ------------------------------------------------
-            # PREDICTION
+            # PERCEPTRON PREDICTION
             # ------------------------------------------------
 
-            prediction = model.predict(
-                features
-            )[0]
+            prediction = model.predict(features)[0]
 
 
             # ------------------------------------------------
             # PERCEPTRON SCORE
             # ------------------------------------------------
 
-            if hasattr(
-                model,
-                "decision_function"
-            ):
+            if hasattr(model, "decision_function"):
 
-                # ------------------------------------------------
-            # PERCEPTRON SCORE
-            # ------------------------------------------------
-
-            if hasattr(
-                model,
-                "decision_function"
-            ):
-
-                decision = float(model.decision_function(features)[0])
-
-                # Convert decision score into a
-                # probability-like visual score.
-                #
-
-                # Convert decision score into a
-                # probability-like visual score.
-                #
-                # This is NOT a true probability because
-                # Perceptron does not provide predict_proba().
-
-                probability_like = (
-                    1 /
-                    (
-                        1 +
-                        math.exp(
-                            -max(
-                                min(
-                                    decision,
-                                    20
-                                ),
-                                -20
-                            )
-                        )
-                    )
+                decision = float(
+                    model.decision_function(
+                        features
+                    )[0]
                 )
 
+                # Convert decision score into a
+                # probability-like visual score.
 
-                if int(prediction) == 1:
+                try:
+
+                    visual_score = (
+                        1.0 /
+                        (
+                            1.0 +
+                            math.exp(-max(
+                                -50,
+                                min(50, decision)
+                            ))
+                        )
+                    )
 
                     confidence = round(
-                        probability_like * 100,
+                        visual_score * 100,
                         2
                     )
 
-                else:
+                except Exception:
 
-                    confidence = round(
-                        (1 - probability_like) * 100,
-                        2
-                    )
+                    confidence = 50.0
 
+            else:
+
+                decision = 0.0
+                confidence = 50.0
+
+
+            # ------------------------------------------------
+            # RESULT
+            #
+            # Your model has classes [0, 1].
+            # Here:
+            # 1 = Positive / Selected
+            # 0 = Negative / Not Selected
+            # ------------------------------------------------
+
+            if int(prediction) == 1:
+
+                result = "Class 1 • Positive Prediction"
+
+                result_class = "positive"
+
+                result_icon = "✓"
+
+            else:
+
+                result = "Class 0 • Negative Prediction"
+
+                result_class = "negative"
+
+                result_icon = "×"
+
+
+        except ValueError as e:
+
+            error = str(e)
 
         except Exception as e:
 
-            print(
-                "Prediction Error:",
-                e
+            error = (
+                "Prediction error: "
+                + str(e)
             )
 
-            prediction = None
 
+    # ========================================================
+    # RENDER PAGE
+    # ========================================================
 
     return render_template_string(
         HTML,
-        prediction=prediction,
-        confidence=confidence
+        result=result,
+        result_class=result_class,
+        result_icon=result_icon,
+        confidence=confidence,
+        cgpa=cgpa,
+        resume_score=resume_score,
+        error=error
     )
 
 
 # ============================================================
-# RUN APPLICATION
+# LOCAL RUN
 # ============================================================
 
 if __name__ == "__main__":
 
+    port = int(
+        os.environ.get(
+            "PORT",
+            5000
+        )
+    )
+
     app.run(
         host="0.0.0.0",
-        port=int(
-            os.environ.get(
-                "PORT",
-                5000
-            )
-        ),
+        port=port,
         debug=False
     )
