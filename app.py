@@ -1,12 +1,11 @@
 from flask import Flask, request, render_template_string
 import joblib
 import os
-import math
 
 app = Flask(__name__)
 
 # ============================================================
-# LOAD PERCEPTRON MODEL
+# LOAD MODEL
 # ============================================================
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -16,7 +15,7 @@ model = joblib.load(MODEL_PATH)
 
 
 # ============================================================
-# HTML + CSS + JAVASCRIPT
+# HTML
 # ============================================================
 
 HTML = r"""
@@ -24,10 +23,11 @@ HTML = r"""
 <html lang="en">
 
 <head>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>NeuroHire AI | Perceptron Predictor</title>
+    <title>NeuroHire AI | Placement Prediction</title>
 
     <style>
 
@@ -37,10 +37,6 @@ HTML = r"""
             box-sizing: border-box;
         }
 
-        html {
-            scroll-behavior: smooth;
-        }
-
         body {
             min-height: 100vh;
             font-family: Arial, Helvetica, sans-serif;
@@ -48,15 +44,28 @@ HTML = r"""
             overflow-x: hidden;
 
             background:
-                radial-gradient(circle at 15% 20%, rgba(0, 255, 255, 0.16), transparent 28%),
-                radial-gradient(circle at 85% 25%, rgba(168, 85, 247, 0.18), transparent 30%),
-                radial-gradient(circle at 50% 90%, rgba(236, 72, 153, 0.14), transparent 28%),
+                radial-gradient(
+                    circle at 15% 20%,
+                    rgba(0, 255, 255, 0.16),
+                    transparent 30%
+                ),
+                radial-gradient(
+                    circle at 85% 20%,
+                    rgba(168, 85, 247, 0.18),
+                    transparent 30%
+                ),
+                radial-gradient(
+                    circle at 50% 100%,
+                    rgba(236, 72, 153, 0.14),
+                    transparent 30%
+                ),
                 #050816;
         }
 
-        /* ====================================================
+
+        /* =========================
            BACKGROUND GRID
-        ==================================================== */
+        ========================= */
 
         body::before {
             content: "";
@@ -64,248 +73,208 @@ HTML = r"""
             inset: 0;
 
             background-image:
-                linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
+                linear-gradient(
+                    rgba(255,255,255,0.035) 1px,
+                    transparent 1px
+                ),
+                linear-gradient(
+                    90deg,
+                    rgba(255,255,255,0.035) 1px,
+                    transparent 1px
+                );
 
             background-size: 50px 50px;
 
-            mask-image: linear-gradient(
-                to bottom,
-                transparent,
-                black 20%,
-                black 80%,
-                transparent
-            );
-
             pointer-events: none;
-            z-index: -3;
+            z-index: -5;
         }
 
 
-        /* ====================================================
-           GLOWING ORBS
-        ==================================================== */
+        /* =========================
+           GLOW ORBS
+        ========================= */
 
         .orb {
             position: fixed;
             border-radius: 50%;
-            filter: blur(3px);
+            filter: blur(5px);
             pointer-events: none;
-            z-index: -2;
+            z-index: -4;
         }
 
-        .orb-one {
-            width: 240px;
-            height: 240px;
+        .orb1 {
+            width: 230px;
+            height: 230px;
 
-            background: rgba(0, 255, 255, 0.14);
-
-            top: 8%;
             left: -70px;
+            top: 12%;
 
-            animation: floatOne 8s ease-in-out infinite;
+            background: rgba(0, 255, 255, 0.13);
+
+            animation: float1 8s ease-in-out infinite;
         }
 
-        .orb-two {
+        .orb2 {
             width: 280px;
             height: 280px;
 
-            background: rgba(168, 85, 247, 0.14);
-
-            right: -90px;
+            right: -100px;
             top: 35%;
 
-            animation: floatTwo 10s ease-in-out infinite;
+            background: rgba(168, 85, 247, 0.14);
+
+            animation: float2 10s ease-in-out infinite;
         }
 
-        .orb-three {
-            width: 200px;
-            height: 200px;
+        .orb3 {
+            width: 190px;
+            height: 190px;
+
+            bottom: -60px;
+            left: 40%;
 
             background: rgba(236, 72, 153, 0.12);
 
-            bottom: -50px;
-            left: 35%;
-
-            animation: floatThree 9s ease-in-out infinite;
+            animation: float3 9s ease-in-out infinite;
         }
 
-        @keyframes floatOne {
+        @keyframes float1 {
+
             0%, 100% {
                 transform: translate(0, 0);
             }
 
             50% {
-                transform: translate(70px, 100px);
+                transform: translate(80px, 90px);
             }
         }
 
-        @keyframes floatTwo {
+        @keyframes float2 {
+
             0%, 100% {
                 transform: translate(0, 0);
             }
 
             50% {
-                transform: translate(-90px, -70px);
+                transform: translate(-80px, -70px);
             }
         }
 
-        @keyframes floatThree {
+        @keyframes float3 {
+
             0%, 100% {
                 transform: translate(0, 0);
             }
 
             50% {
-                transform: translate(80px, -80px);
+                transform: translate(70px, -80px);
             }
         }
 
 
-        /* ====================================================
-           PARTICLES
-        ==================================================== */
-
-        .particles {
-            position: fixed;
-            inset: 0;
-            pointer-events: none;
-            z-index: -1;
-        }
-
-        .particle {
-            position: absolute;
-            width: 3px;
-            height: 3px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.55);
-            box-shadow: 0 0 12px rgba(0,255,255,0.7);
-            animation: particleFloat linear infinite;
-        }
-
-        .p1 { left: 10%; top: 30%; animation-duration: 9s; }
-        .p2 { left: 22%; top: 70%; animation-duration: 12s; }
-        .p3 { left: 38%; top: 18%; animation-duration: 10s; }
-        .p4 { left: 55%; top: 80%; animation-duration: 14s; }
-        .p5 { left: 70%; top: 22%; animation-duration: 11s; }
-        .p6 { left: 84%; top: 65%; animation-duration: 8s; }
-        .p7 { left: 92%; top: 15%; animation-duration: 13s; }
-        .p8 { left: 47%; top: 45%; animation-duration: 10s; }
-
-        @keyframes particleFloat {
-            0% {
-                transform: translateY(0) scale(1);
-                opacity: 0.2;
-            }
-
-            50% {
-                transform: translateY(-80px) scale(1.5);
-                opacity: 1;
-            }
-
-            100% {
-                transform: translateY(-160px) scale(0.5);
-                opacity: 0;
-            }
-        }
-
-
-        /* ====================================================
-           MAIN CONTAINER
-        ==================================================== */
+        /* =========================
+           PAGE
+        ========================= */
 
         .page {
-            width: 100%;
             min-height: 100vh;
-            padding: 45px 20px 70px;
+            padding: 45px 20px 60px;
         }
 
         .container {
-            max-width: 1100px;
+            max-width: 1050px;
             margin: auto;
         }
 
 
-        /* ====================================================
+        /* =========================
            HEADER
-        ==================================================== */
+        ========================= */
 
-        .top-badge {
+        .badge {
             width: fit-content;
-            margin: 0 auto 18px;
+            margin: 0 auto 20px;
 
             padding: 9px 18px;
 
-            border: 1px solid rgba(0,255,255,0.3);
-            border-radius: 999px;
+            border-radius: 50px;
 
-            background: rgba(0,255,255,0.06);
+            border: 1px solid rgba(103,232,249,0.3);
 
-            color: #7df9ff;
+            background: rgba(103,232,249,0.06);
 
-            font-size: 12px;
+            color: #67e8f9;
+
+            font-size: 11px;
             font-weight: bold;
-            letter-spacing: 2px;
 
-            box-shadow:
-                0 0 20px rgba(0,255,255,0.08);
+            letter-spacing: 2px;
         }
 
-        .header {
+        header {
             text-align: center;
             margin-bottom: 42px;
         }
 
-        .header h1 {
-            font-size: clamp(38px, 7vw, 76px);
-            line-height: 0.95;
-            font-weight: 900;
-            letter-spacing: -3px;
+        header h1 {
+            font-size: clamp(42px, 7vw, 76px);
 
-            background: linear-gradient(
-                90deg,
-                #67e8f9,
-                #a78bfa,
-                #f472b6,
-                #67e8f9
-            );
+            font-weight: 900;
+
+            letter-spacing: -4px;
+
+            background:
+                linear-gradient(
+                    90deg,
+                    #67e8f9,
+                    #818cf8,
+                    #c084fc,
+                    #f472b6,
+                    #67e8f9
+                );
 
             background-size: 300% auto;
 
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
 
-            animation: gradientMove 5s linear infinite;
+            animation: gradient 5s linear infinite;
         }
 
-        @keyframes gradientMove {
+        @keyframes gradient {
+
             0% {
-                background-position: 0% center;
+                background-position: 0%;
             }
 
             100% {
-                background-position: 300% center;
+                background-position: 300%;
             }
         }
 
-        .header p {
-            margin-top: 20px;
-            color: #a7b0c8;
-            font-size: 16px;
+        header p {
+            margin-top: 18px;
+
+            color: #8d97ae;
+
+            font-size: 15px;
+
             line-height: 1.7;
         }
 
 
-        /* ====================================================
+        /* =========================
            MAIN CARD
-        ==================================================== */
+        ========================= */
 
-        .main-card {
+        .card {
             position: relative;
 
-            padding: 42px;
+            padding: 40px;
+
+            border-radius: 30px;
 
             border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 30px;
 
             background:
                 linear-gradient(
@@ -318,7 +287,7 @@ HTML = r"""
             -webkit-backdrop-filter: blur(25px);
 
             box-shadow:
-                0 30px 100px rgba(0,0,0,0.45),
+                0 35px 100px rgba(0,0,0,0.45),
                 inset 0 1px 0 rgba(255,255,255,0.08);
 
             overflow: hidden;
@@ -326,8 +295,9 @@ HTML = r"""
             transition: transform 0.15s ease;
         }
 
-        .main-card::before {
+        .card::before {
             content: "";
+
             position: absolute;
 
             top: 0;
@@ -336,123 +306,111 @@ HTML = r"""
             width: 84%;
             height: 1px;
 
-            background: linear-gradient(
-                90deg,
-                transparent,
-                #67e8f9,
-                #a78bfa,
-                #f472b6,
-                transparent
-            );
+            background:
+                linear-gradient(
+                    90deg,
+                    transparent,
+                    #67e8f9,
+                    #a78bfa,
+                    #f472b6,
+                    transparent
+                );
 
             box-shadow: 0 0 25px #67e8f9;
         }
 
 
-        /* ====================================================
+        /* =========================
            INPUT GRID
-        ==================================================== */
+        ========================= */
 
         .input-grid {
             display: grid;
+
             grid-template-columns: 1fr 1fr;
-            gap: 25px;
+
+            gap: 24px;
         }
 
         .input-card {
-            padding: 27px;
+            padding: 28px;
 
             border-radius: 22px;
 
-            background: rgba(3, 7, 25, 0.55);
+            background: rgba(2,6,23,0.55);
 
             border: 1px solid rgba(255,255,255,0.08);
 
-            position: relative;
-
-            overflow: hidden;
-
-            transition:
-                transform 0.3s ease,
-                border-color 0.3s ease,
-                box-shadow 0.3s ease;
+            transition: 0.3s ease;
         }
 
         .input-card:hover {
             transform: translateY(-5px);
 
-            border-color: rgba(103,232,249,0.4);
+            border-color: rgba(103,232,249,0.35);
 
             box-shadow:
-                0 15px 45px rgba(0,0,0,0.25),
-                0 0 30px rgba(103,232,249,0.06);
+                0 15px 40px rgba(0,0,0,0.25);
         }
 
-        .input-number {
-            width: 38px;
-            height: 38px;
+        .number {
+            width: 40px;
+            height: 40px;
 
             display: flex;
+
             align-items: center;
             justify-content: center;
 
             border-radius: 12px;
 
-            background: linear-gradient(
-                135deg,
-                #06b6d4,
-                #6366f1
-            );
+            background:
+                linear-gradient(
+                    135deg,
+                    #06b6d4,
+                    #6366f1
+                );
 
-            font-weight: 900;
-            font-size: 14px;
+            font-weight: bold;
 
             margin-bottom: 20px;
-
-            box-shadow:
-                0 8px 25px rgba(6,182,212,0.25);
         }
 
-        .input-card:nth-child(2) .input-number {
-            background: linear-gradient(
-                135deg,
-                #a855f7,
-                #ec4899
-            );
-
-            box-shadow:
-                0 8px 25px rgba(168,85,247,0.25);
+        .input-card:nth-child(2) .number {
+            background:
+                linear-gradient(
+                    135deg,
+                    #a855f7,
+                    #ec4899
+                );
         }
 
-        .input-card h3 {
-            font-size: 20px;
+        .input-card h2 {
+            font-size: 21px;
             margin-bottom: 7px;
         }
 
         .input-card p {
-            color: #8791aa;
+            color: #7d879f;
             font-size: 13px;
-            margin-bottom: 22px;
+            margin-bottom: 20px;
         }
 
 
-        /* ====================================================
+        /* =========================
            INPUT
-        ==================================================== */
+        ========================= */
 
-        .input-wrapper {
-            position: relative;
-        }
-
-        .input-wrapper input {
+        input {
             width: 100%;
 
-            padding: 17px 18px;
+            padding: 17px;
+
+            border-radius: 14px;
 
             border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 15px;
 
-            background: rgba(255,255,255,0.045);
+            background: rgba(255,255,255,0.04);
 
             color: white;
 
@@ -464,11 +422,7 @@ HTML = r"""
             transition: 0.3s ease;
         }
 
-        .input-wrapper input::placeholder {
-            color: #5f6880;
-        }
-
-        .input-wrapper input:focus {
+        input:focus {
             border-color: #67e8f9;
 
             box-shadow:
@@ -484,46 +438,53 @@ HTML = r"""
                 0 0 30px rgba(192,132,252,0.1);
         }
 
+        input::placeholder {
+            color: #5d667b;
+        }
 
-        /* ====================================================
-           RANGE METER
-        ==================================================== */
+
+        /* =========================
+           METERS
+        ========================= */
 
         .meter {
             margin-top: 18px;
         }
 
-        .meter-top {
+        .meter-label {
             display: flex;
             justify-content: space-between;
 
-            color: #68738e;
+            color: #68738c;
 
             font-size: 11px;
+
             margin-bottom: 8px;
         }
 
-        .meter-track {
+        .track {
             height: 6px;
 
-            border-radius: 999px;
+            border-radius: 50px;
 
             background: rgba(255,255,255,0.06);
 
             overflow: hidden;
         }
 
-        .meter-fill {
+        .fill {
             width: 0%;
+
             height: 100%;
 
-            border-radius: 999px;
+            border-radius: 50px;
 
-            background: linear-gradient(
-                90deg,
-                #06b6d4,
-                #22d3ee
-            );
+            background:
+                linear-gradient(
+                    90deg,
+                    #06b6d4,
+                    #22d3ee
+                );
 
             box-shadow:
                 0 0 15px rgba(34,211,238,0.7);
@@ -531,45 +492,44 @@ HTML = r"""
             transition: width 0.4s ease;
         }
 
-        .input-card:nth-child(2) .meter-fill {
-            background: linear-gradient(
-                90deg,
-                #a855f7,
-                #ec4899
-            );
-
-            box-shadow:
-                0 0 15px rgba(236,72,153,0.6);
+        .input-card:nth-child(2) .fill {
+            background:
+                linear-gradient(
+                    90deg,
+                    #a855f7,
+                    #ec4899
+                );
         }
 
 
-        /* ====================================================
+        /* =========================
            BUTTON
-        ==================================================== */
+        ========================= */
 
-        .predict-area {
-            margin-top: 35px;
+        .button-area {
             text-align: center;
+
+            margin-top: 35px;
         }
 
-        .predict-btn {
+        .predict-button {
             position: relative;
-
-            border: none;
-            outline: none;
 
             padding: 18px 48px;
 
+            border: none;
+
             border-radius: 999px;
+
+            cursor: pointer;
 
             color: white;
 
-            font-size: 15px;
+            font-size: 14px;
+
             font-weight: 900;
 
             letter-spacing: 1px;
-
-            cursor: pointer;
 
             overflow: hidden;
 
@@ -585,58 +545,57 @@ HTML = r"""
 
             background-size: 300% auto;
 
+            animation:
+                buttonGradient 4s linear infinite;
+
             box-shadow:
-                0 12px 40px rgba(99,102,241,0.3),
-                0 0 30px rgba(6,182,212,0.15);
+                0 12px 40px rgba(99,102,241,0.3);
 
-            animation: buttonGradient 4s linear infinite;
-
-            transition:
-                transform 0.2s ease,
-                box-shadow 0.2s ease;
+            transition: 0.2s ease;
         }
 
         @keyframes buttonGradient {
+
             0% {
-                background-position: 0% center;
+                background-position: 0%;
             }
 
             100% {
-                background-position: 300% center;
+                background-position: 300%;
             }
         }
 
-        .predict-btn:hover {
+        .predict-button:hover {
             transform: translateY(-3px) scale(1.02);
 
             box-shadow:
-                0 18px 55px rgba(99,102,241,0.45),
-                0 0 45px rgba(6,182,212,0.2);
+                0 18px 55px rgba(99,102,241,0.45);
         }
 
-        .predict-btn:active {
+        .predict-button:active {
             transform: scale(0.97);
         }
 
-        .predict-btn::after {
-            content: "";
-
+        .shine {
             position: absolute;
 
-            top: -50%;
+            top: -60%;
+
             left: -100%;
 
-            width: 70%;
-            height: 200%;
+            width: 60%;
+
+            height: 220%;
+
+            background: rgba(255,255,255,0.25);
 
             transform: rotate(25deg);
 
-            background: rgba(255,255,255,0.28);
-
-            animation: shine 3s ease-in-out infinite;
+            animation: shine 3s infinite;
         }
 
         @keyframes shine {
+
             0% {
                 left: -100%;
             }
@@ -646,57 +605,46 @@ HTML = r"""
             }
         }
 
-        .small-note {
-            margin-top: 15px;
-            color: #606b84;
-            font-size: 11px;
-        }
 
-
-        /* ====================================================
+        /* =========================
            ERROR
-        ==================================================== */
+        ========================= */
 
         .error {
-            margin-bottom: 25px;
+            padding: 15px 20px;
 
-            padding: 16px 20px;
+            margin-bottom: 25px;
 
             border-radius: 15px;
 
-            background: rgba(239,68,68,0.1);
-
             border: 1px solid rgba(239,68,68,0.3);
+
+            background: rgba(239,68,68,0.1);
 
             color: #fca5a5;
 
             text-align: center;
-
-            font-size: 14px;
         }
 
 
-        /* ====================================================
+        /* =========================
            RESULT
-        ==================================================== */
+        ========================= */
 
         .result {
             margin-top: 35px;
 
-            padding: 30px;
+            padding: 32px;
 
             border-radius: 25px;
 
             text-align: center;
 
-            border: 1px solid rgba(255,255,255,0.1);
-
-            background: rgba(255,255,255,0.035);
-
-            animation: resultAppear 0.7s ease forwards;
+            animation: resultIn 0.7s ease;
         }
 
-        @keyframes resultAppear {
+        @keyframes resultIn {
+
             from {
                 opacity: 0;
                 transform: translateY(25px) scale(0.96);
@@ -708,151 +656,93 @@ HTML = r"""
             }
         }
 
+        .result.placed {
+            background: rgba(16,185,129,0.07);
+
+            border: 1px solid rgba(52,211,153,0.35);
+
+            box-shadow:
+                0 0 60px rgba(52,211,153,0.08);
+        }
+
+        .result.unplaced {
+            background: rgba(239,68,68,0.07);
+
+            border: 1px solid rgba(248,113,113,0.35);
+
+            box-shadow:
+                0 0 60px rgba(248,113,113,0.08);
+        }
+
         .result-icon {
-            width: 78px;
-            height: 78px;
+            width: 80px;
+            height: 80px;
 
             margin: 0 auto 18px;
 
             border-radius: 50%;
 
             display: flex;
+
             align-items: center;
             justify-content: center;
 
-            font-size: 32px;
+            font-size: 34px;
 
-            animation: iconPulse 2s ease-in-out infinite;
+            font-weight: bold;
         }
 
-        @keyframes iconPulse {
-            0%, 100% {
-                transform: scale(1);
-            }
-
-            50% {
-                transform: scale(1.08);
-            }
-        }
-
-        .result.positive {
-            border-color: rgba(52,211,153,0.35);
-
-            box-shadow:
-                0 0 50px rgba(52,211,153,0.08);
-        }
-
-        .result.positive .result-icon {
-            background: rgba(16,185,129,0.13);
+        .placed .result-icon {
             color: #34d399;
+
+            background: rgba(52,211,153,0.12);
 
             box-shadow:
                 0 0 35px rgba(52,211,153,0.2);
         }
 
-        .result.negative {
-            border-color: rgba(248,113,113,0.35);
-
-            box-shadow:
-                0 0 50px rgba(248,113,113,0.07);
-        }
-
-        .result.negative .result-icon {
-            background: rgba(239,68,68,0.13);
+        .unplaced .result-icon {
             color: #f87171;
 
+            background: rgba(248,113,113,0.12);
+
             box-shadow:
-                0 0 35px rgba(248,113,113,0.18);
+                0 0 35px rgba(248,113,113,0.2);
         }
 
         .result h2 {
-            font-size: 30px;
+            font-size: 34px;
+
+            letter-spacing: 2px;
+
             margin-bottom: 10px;
         }
 
         .result p {
-            color: #8d97ae;
+            color: #8993aa;
+
             font-size: 14px;
         }
 
-        .score-box {
-            max-width: 520px;
+
+        /* =========================
+           DETAILS
+        ========================= */
+
+        .details {
+            display: grid;
+
+            grid-template-columns: 1fr 1fr;
+
+            gap: 15px;
+
+            max-width: 550px;
+
             margin: 25px auto 0;
         }
 
-        .score-header {
-            display: flex;
-            justify-content: space-between;
-
-            margin-bottom: 9px;
-
-            font-size: 12px;
-            color: #8d97ae;
-        }
-
-        .score-header strong {
-            color: white;
-        }
-
-        .score-track {
-            height: 10px;
-
-            border-radius: 999px;
-
-            background: rgba(255,255,255,0.06);
-
-            overflow: hidden;
-        }
-
-        .score-fill {
-            height: 100%;
-
-            width: {{ confidence }}%;
-
-            border-radius: 999px;
-
-            background:
-                linear-gradient(
-                    90deg,
-                    #06b6d4,
-                    #6366f1,
-                    #a855f7,
-                    #ec4899
-                );
-
-            box-shadow:
-                0 0 20px rgba(168,85,247,0.45);
-
-            animation: scoreLoad 1.2s ease;
-        }
-
-        @keyframes scoreLoad {
-            from {
-                width: 0%;
-            }
-
-            to {
-                width: {{ confidence }}%;
-            }
-        }
-
-
-        /* ====================================================
-           INFO ROW
-        ==================================================== */
-
-        .info-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-
-            max-width: 520px;
-
-            margin: 22px auto 0;
-        }
-
-        .info-box {
-            padding: 15px;
+        .detail {
+            padding: 17px;
 
             border-radius: 15px;
 
@@ -861,10 +751,10 @@ HTML = r"""
             border: 1px solid rgba(255,255,255,0.06);
         }
 
-        .info-box span {
+        .detail span {
             display: block;
 
-            color: #69738b;
+            color: #68738c;
 
             font-size: 10px;
 
@@ -872,34 +762,36 @@ HTML = r"""
 
             letter-spacing: 1px;
 
-            margin-bottom: 6px;
+            margin-bottom: 7px;
         }
 
-        .info-box strong {
-            font-size: 17px;
+        .detail strong {
+            font-size: 19px;
         }
 
 
-        /* ====================================================
-           SCANNING OVERLAY
-        ==================================================== */
+        /* =========================
+           SCAN OVERLAY
+        ========================= */
 
         .scan-overlay {
             position: fixed;
+
             inset: 0;
 
             display: none;
+
             align-items: center;
             justify-content: center;
 
             background:
                 radial-gradient(
                     circle,
-                    rgba(12,18,50,0.72),
+                    rgba(20,25,65,0.7),
                     rgba(2,4,15,0.97)
                 );
 
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(12px);
 
             z-index: 9999;
         }
@@ -911,10 +803,11 @@ HTML = r"""
         .scanner {
             position: relative;
 
-            width: 260px;
-            height: 260px;
+            width: 270px;
+            height: 270px;
 
             display: flex;
+
             align-items: center;
             justify-content: center;
         }
@@ -926,39 +819,40 @@ HTML = r"""
 
             border: 1px solid rgba(103,232,249,0.5);
 
-            animation: ringRotate 3s linear infinite;
+            animation: rotate 3s linear infinite;
         }
 
-        .ring-one {
-            width: 250px;
-            height: 250px;
+        .ring1 {
+            width: 260px;
+            height: 260px;
 
             border-top-color: #67e8f9;
             border-bottom-color: #a78bfa;
         }
 
-        .ring-two {
-            width: 190px;
-            height: 190px;
+        .ring2 {
+            width: 200px;
+            height: 200px;
 
             border-left-color: #ec4899;
             border-right-color: #67e8f9;
 
             animation-direction: reverse;
+
             animation-duration: 2s;
         }
 
-        .ring-three {
-            width: 135px;
-            height: 135px;
+        .ring3 {
+            width: 140px;
+            height: 140px;
 
             border-top-color: #f472b6;
-            border-right-color: #67e8f9;
 
             animation-duration: 1.5s;
         }
 
-        @keyframes ringRotate {
+        @keyframes rotate {
+
             from {
                 transform: rotate(0deg);
             }
@@ -968,56 +862,52 @@ HTML = r"""
             }
         }
 
-        .ai-core {
+        .core {
             width: 75px;
             height: 75px;
 
             border-radius: 50%;
 
             display: flex;
+
             align-items: center;
             justify-content: center;
 
-            font-size: 28px;
+            font-weight: 900;
 
             background:
                 radial-gradient(
                     circle,
-                    #ffffff,
-                    #67e8f9 20%,
-                    #6366f1 55%,
-                    #a855f7 100%
+                    white,
+                    #67e8f9 25%,
+                    #6366f1 60%,
+                    #a855f7
                 );
 
-            color: #070a1c;
+            color: #050816;
 
             box-shadow:
-                0 0 25px #67e8f9,
-                0 0 60px rgba(168,85,247,0.7);
+                0 0 30px #67e8f9,
+                0 0 70px rgba(168,85,247,0.7);
 
-            animation: corePulse 1s ease-in-out infinite;
+            animation: pulse 1s infinite;
         }
 
-        @keyframes corePulse {
+        @keyframes pulse {
+
             0%, 100% {
                 transform: scale(0.92);
-                box-shadow:
-                    0 0 20px #67e8f9,
-                    0 0 40px rgba(168,85,247,0.5);
             }
 
             50% {
                 transform: scale(1.08);
-                box-shadow:
-                    0 0 35px #67e8f9,
-                    0 0 80px rgba(168,85,247,0.8);
             }
         }
 
         .scan-line {
             position: absolute;
 
-            width: 280px;
+            width: 290px;
             height: 2px;
 
             background:
@@ -1030,24 +920,26 @@ HTML = r"""
                     transparent
                 );
 
-            box-shadow:
-                0 0 15px #67e8f9;
+            box-shadow: 0 0 15px #67e8f9;
 
-            animation: scanLine 1.5s ease-in-out infinite;
+            animation: scan 1.5s infinite;
         }
 
-        @keyframes scanLine {
+        @keyframes scan {
+
             0%, 100% {
-                transform: translateY(-105px);
+                transform: translateY(-110px);
+
                 opacity: 0;
             }
 
-            20% {
+            25% {
                 opacity: 1;
             }
 
             50% {
-                transform: translateY(105px);
+                transform: translateY(110px);
+
                 opacity: 1;
             }
 
@@ -1059,26 +951,27 @@ HTML = r"""
         .scan-text {
             position: absolute;
 
-            top: calc(50% + 155px);
-
-            text-align: center;
+            top: calc(50% + 160px);
 
             width: 100%;
 
-            font-size: 14px;
+            text-align: center;
+
+            color: #c4f7ff;
+
+            font-size: 13px;
 
             font-weight: bold;
 
             letter-spacing: 3px;
 
-            color: #c4f7ff;
-
-            animation: textBlink 0.8s infinite alternate;
+            animation: blink 0.8s infinite alternate;
         }
 
-        @keyframes textBlink {
+        @keyframes blink {
+
             from {
-                opacity: 0.45;
+                opacity: 0.4;
             }
 
             to {
@@ -1087,26 +980,26 @@ HTML = r"""
         }
 
 
-        /* ====================================================
+        /* =========================
            FOOTER
-        ==================================================== */
+        ========================= */
 
         footer {
             text-align: center;
 
-            margin-top: 35px;
+            margin-top: 30px;
 
-            color: #4e5870;
+            color: #4f5970;
 
-            font-size: 11px;
+            font-size: 10px;
 
-            letter-spacing: 1px;
+            letter-spacing: 1.5px;
         }
 
 
-        /* ====================================================
-           RESPONSIVE
-        ==================================================== */
+        /* =========================
+           MOBILE
+        ========================= */
 
         @media (max-width: 750px) {
 
@@ -1114,8 +1007,9 @@ HTML = r"""
                 padding: 30px 15px 50px;
             }
 
-            .main-card {
+            .card {
                 padding: 22px;
+
                 border-radius: 22px;
             }
 
@@ -1123,87 +1017,76 @@ HTML = r"""
                 grid-template-columns: 1fr;
             }
 
-            .header {
-                margin-bottom: 28px;
+            .details {
+                grid-template-columns: 1fr;
             }
 
-            .header h1 {
-                letter-spacing: -2px;
-            }
-
-            .header p {
-                font-size: 14px;
-            }
-
-            .predict-btn {
+            .predict-button {
                 width: 100%;
             }
 
-            .info-row {
-                grid-template-columns: 1fr;
+            header h1 {
+                letter-spacing: -2px;
             }
         }
 
     </style>
+
 </head>
 
 
 <body>
 
     <!-- BACKGROUND -->
-    <div class="orb orb-one"></div>
-    <div class="orb orb-two"></div>
-    <div class="orb orb-three"></div>
 
-    <div class="particles">
-        <span class="particle p1"></span>
-        <span class="particle p2"></span>
-        <span class="particle p3"></span>
-        <span class="particle p4"></span>
-        <span class="particle p5"></span>
-        <span class="particle p6"></span>
-        <span class="particle p7"></span>
-        <span class="particle p8"></span>
-    </div>
+    <div class="orb orb1"></div>
+    <div class="orb orb2"></div>
+    <div class="orb orb3"></div>
 
 
-    <!-- SCANNING OVERLAY -->
+    <!-- SCANNING SCREEN -->
 
-    <div class="scan-overlay" id="scanOverlay">
+    <div
+        class="scan-overlay"
+        id="scanOverlay"
+    >
 
         <div class="scanner">
 
-            <div class="ring ring-one"></div>
-            <div class="ring ring-two"></div>
-            <div class="ring ring-three"></div>
+            <div class="ring ring1"></div>
+
+            <div class="ring ring2"></div>
+
+            <div class="ring ring3"></div>
 
             <div class="scan-line"></div>
 
-            <div class="ai-core">
+            <div class="core">
                 AI
             </div>
 
         </div>
 
         <div class="scan-text">
-            ANALYZING CANDIDATE...
+            ANALYZING PLACEMENT...
         </div>
 
     </div>
 
 
-    <!-- MAIN PAGE -->
+    <!-- PAGE -->
 
     <div class="page">
 
         <div class="container">
 
+
             <!-- HEADER -->
 
-            <div class="header">
+            <header>
 
-                <div class="top-badge">
-                    ⚡ PERCEPTRON INTELLIGENCE SYSTEM
+                <div class="badge">
+                    ⚡ PERCEPTRON PLACEMENT INTELLIGENCE
                 </div>
 
                 <h1>
@@ -1211,16 +1094,19 @@ HTML = r"""
                 </h1>
 
                 <p>
-                    Intelligent candidate prediction powered by
-                    Machine Learning and Perceptron technology.
+                    Predict candidate placement using
+                    CGPA and Resume Score.
                 </p>
 
-            </div>
+            </header>
 
 
-            <!-- MAIN CARD -->
+            <!-- CARD -->
 
-            <div class="main-card" id="mainCard">
+            <div
+                class="card"
+                id="mainCard"
+            >
 
                 {% if error %}
 
@@ -1234,6 +1120,7 @@ HTML = r"""
                 <!-- FORM -->
 
                 <form
+                    action="/predict"
                     method="POST"
                     id="predictionForm"
                     onsubmit="startScanning()"
@@ -1246,46 +1133,48 @@ HTML = r"""
 
                         <div class="input-card">
 
-                            <div class="input-number">
+                            <div class="number">
                                 01
                             </div>
 
-                            <h3>
+                            <h2>
                                 Academic CGPA
-                            </h3>
+                            </h2>
 
                             <p>
-                                Enter the candidate's CGPA.
+                                Enter CGPA between 0 and 10.
                             </p>
 
-                            <div class="input-wrapper">
-
-                                <input
-                                    type="number"
-                                    name="cgpa"
-                                    id="cgpa"
-                                    min="0"
-                                    max="10"
-                                    step="0.01"
-                                    placeholder="e.g. 8.50"
-                                    value="{{ cgpa }}"
-                                    required
-                                >
-
-                            </div>
+                            <input
+                                type="number"
+                                name="cgpa"
+                                id="cgpa"
+                                min="0"
+                                max="10"
+                                step="0.01"
+                                placeholder="Example: 8.00"
+                                value="{{ cgpa }}"
+                                required
+                            >
 
                             <div class="meter">
 
-                                <div class="meter-top">
+                                <div class="meter-label">
+
                                     <span>0</span>
-                                    <span id="cgpaValue">0 / 10</span>
+
+                                    <span id="cgpaText">
+                                        0 / 10
+                                    </span>
+
                                     <span>10</span>
+
                                 </div>
 
-                                <div class="meter-track">
+                                <div class="track">
 
                                     <div
-                                        class="meter-fill"
+                                        class="fill"
                                         id="cgpaFill"
                                     ></div>
 
@@ -1300,46 +1189,48 @@ HTML = r"""
 
                         <div class="input-card">
 
-                            <div class="input-number">
+                            <div class="number">
                                 02
                             </div>
 
-                            <h3>
+                            <h2>
                                 Resume Score
-                            </h3>
+                            </h2>
 
                             <p>
-                                Enter the candidate's resume score.
+                                Enter Resume Score between 0 and 100.
                             </p>
 
-                            <div class="input-wrapper">
-
-                                <input
-                                    type="number"
-                                    name="resume_score"
-                                    id="resumeScore"
-                                    min="0"
-                                    max="100"
-                                    step="0.01"
-                                    placeholder="e.g. 82"
-                                    value="{{ resume_score }}"
-                                    required
-                                >
-
-                            </div>
+                            <input
+                                type="number"
+                                name="resume_score"
+                                id="resumeScore"
+                                min="0"
+                                max="100"
+                                step="0.01"
+                                placeholder="Example: 79.88"
+                                value="{{ resume_score }}"
+                                required
+                            >
 
                             <div class="meter">
 
-                                <div class="meter-top">
+                                <div class="meter-label">
+
                                     <span>0</span>
-                                    <span id="resumeValue">0 / 100</span>
+
+                                    <span id="resumeText">
+                                        0 / 100
+                                    </span>
+
                                     <span>100</span>
+
                                 </div>
 
-                                <div class="meter-track">
+                                <div class="track">
 
                                     <div
-                                        class="meter-fill"
+                                        class="fill"
                                         id="resumeFill"
                                     ></div>
 
@@ -1354,19 +1245,19 @@ HTML = r"""
 
                     <!-- BUTTON -->
 
-                    <div class="predict-area">
+                    <div class="button-area">
 
                         <button
-                            type="submit"
-                            class="predict-btn"
+                            class="predict-button"
                             id="predictButton"
+                            type="submit"
                         >
-                            ✦ ANALYZE CANDIDATE
-                        </button>
 
-                        <div class="small-note">
-                            AI analysis usually completes in milliseconds
-                        </div>
+                            <span class="shine"></span>
+
+                            ✦ PREDICT PLACEMENT
+
+                        </button>
 
                     </div>
 
@@ -1388,39 +1279,17 @@ HTML = r"""
                         </h2>
 
                         <p>
-                            Perceptron model analysis completed successfully.
+                            Placement prediction generated
+                            successfully using the Perceptron model.
                         </p>
 
 
-                        <div class="score-box">
+                        <div class="details">
 
-                            <div class="score-header">
-
-                                <span>
-                                    Decision Strength
-                                </span>
-
-                                <strong>
-                                    {{ confidence }}%
-                                </strong>
-
-                            </div>
-
-                            <div class="score-track">
-
-                                <div class="score-fill"></div>
-
-                            </div>
-
-                        </div>
-
-
-                        <div class="info-row">
-
-                            <div class="info-box">
+                            <div class="detail">
 
                                 <span>
-                                    CGPA
+                                    Academic CGPA
                                 </span>
 
                                 <strong>
@@ -1429,7 +1298,8 @@ HTML = r"""
 
                             </div>
 
-                            <div class="info-box">
+
+                            <div class="detail">
 
                                 <span>
                                     Resume Score
@@ -1451,7 +1321,7 @@ HTML = r"""
 
 
             <footer>
-                NEUROHIRE AI • PERCEPTRON MACHINE LEARNING SYSTEM
+                NEUROHIRE AI • MACHINE LEARNING PLACEMENT PREDICTION
             </footer>
 
         </div>
@@ -1459,98 +1329,106 @@ HTML = r"""
     </div>
 
 
-    <!-- ====================================================
+    <!-- =====================================================
          JAVASCRIPT
-    ==================================================== -->
+    ====================================================== -->
 
     <script>
 
-        const cgpaInput = document.getElementById("cgpa");
-        const resumeInput = document.getElementById("resumeScore");
+        const cgpaInput =
+            document.getElementById("cgpa");
 
-        const cgpaFill = document.getElementById("cgpaFill");
-        const resumeFill = document.getElementById("resumeFill");
+        const resumeInput =
+            document.getElementById("resumeScore");
 
-        const cgpaValue = document.getElementById("cgpaValue");
-        const resumeValue = document.getElementById("resumeValue");
+        const cgpaFill =
+            document.getElementById("cgpaFill");
+
+        const resumeFill =
+            document.getElementById("resumeFill");
+
+        const cgpaText =
+            document.getElementById("cgpaText");
+
+        const resumeText =
+            document.getElementById("resumeText");
 
 
         function updateCGPA() {
 
-            if (!cgpaInput) {
-                return;
-            }
-
-            let value = parseFloat(cgpaInput.value);
+            let value =
+                parseFloat(cgpaInput.value);
 
             if (isNaN(value)) {
                 value = 0;
             }
 
-            value = Math.max(0, Math.min(10, value));
+            value =
+                Math.max(
+                    0,
+                    Math.min(10, value)
+                );
 
-            const percentage = (value / 10) * 100;
+            let percentage =
+                (value / 10) * 100;
 
-            if (cgpaFill) {
-                cgpaFill.style.width = percentage + "%";
-            }
+            cgpaFill.style.width =
+                percentage + "%";
 
-            if (cgpaValue) {
-                cgpaValue.textContent =
-                    value.toFixed(2) + " / 10";
-            }
+            cgpaText.textContent =
+                value.toFixed(2) + " / 10";
         }
 
 
         function updateResume() {
 
-            if (!resumeInput) {
-                return;
-            }
-
-            let value = parseFloat(resumeInput.value);
+            let value =
+                parseFloat(resumeInput.value);
 
             if (isNaN(value)) {
                 value = 0;
             }
 
-            value = Math.max(0, Math.min(100, value));
+            value =
+                Math.max(
+                    0,
+                    Math.min(100, value)
+                );
 
-            if (resumeFill) {
-                resumeFill.style.width = value + "%";
-            }
+            resumeFill.style.width =
+                value + "%";
 
-            if (resumeValue) {
-                resumeValue.textContent =
-                    value.toFixed(0) + " / 100";
-            }
+            resumeText.textContent =
+                value.toFixed(2) + " / 100";
         }
 
 
-        if (cgpaInput) {
-            cgpaInput.addEventListener(
-                "input",
-                updateCGPA
-            );
+        cgpaInput.addEventListener(
+            "input",
+            updateCGPA
+        );
 
-            updateCGPA();
-        }
+        resumeInput.addEventListener(
+            "input",
+            updateResume
+        );
 
 
-        if (resumeInput) {
-            resumeInput.addEventListener(
-                "input",
-                updateResume
-            );
+        updateCGPA();
+        updateResume();
 
-            updateResume();
-        }
 
+        /* =================================================
+           SCANNING ANIMATION
+        ================================================= */
 
         function startScanning() {
 
-            const cgpa = parseFloat(cgpaInput.value);
-            const resume = parseFloat(resumeInput.value);
+            const cgpa =
+                parseFloat(cgpaInput.value);
+
+            const resume =
+                parseFloat(resumeInput.value);
 
             if (
                 isNaN(cgpa) ||
@@ -1564,29 +1442,32 @@ HTML = r"""
             }
 
             const overlay =
-                document.getElementById("scanOverlay");
+                document.getElementById(
+                    "scanOverlay"
+                );
 
             const button =
-                document.getElementById("predictButton");
+                document.getElementById(
+                    "predictButton"
+                );
 
-            if (overlay) {
-                overlay.classList.add("active");
-            }
+            overlay.classList.add("active");
 
-            if (button) {
-                button.disabled = true;
-                button.innerHTML =
-                    "◉ ANALYZING CANDIDATE...";
-            }
+            button.disabled = true;
+
+            button.innerHTML =
+                "◉ ANALYZING PLACEMENT...";
         }
 
 
-        /* ====================================================
-           MOUSE TILT EFFECT
-        ==================================================== */
+        /* =================================================
+           3D CARD EFFECT
+        ================================================= */
 
         const card =
-            document.getElementById("mainCard");
+            document.getElementById(
+                "mainCard"
+            );
 
         if (card) {
 
@@ -1614,15 +1495,21 @@ HTML = r"""
                         rect.height / 2;
 
                     const rotateX =
-                        ((y - centerY) / centerY) * -1.2;
+                        ((y - centerY) /
+                        centerY) * -1.2;
 
                     const rotateY =
-                        ((x - centerX) / centerX) * 1.2;
+                        ((x - centerX) /
+                        centerX) * 1.2;
 
                     card.style.transform =
                         "perspective(1200px) " +
-                        "rotateX(" + rotateX + "deg) " +
-                        "rotateY(" + rotateY + "deg)";
+                        "rotateX(" +
+                        rotateX +
+                        "deg) " +
+                        "rotateY(" +
+                        rotateY +
+                        "deg)";
                 }
             );
 
@@ -1649,172 +1536,165 @@ HTML = r"""
 
 
 # ============================================================
-# FLASK ROUTE
+# HOME PAGE
 # ============================================================
 
-@app.route("/", methods=["GET", "POST"])
+@app.route("/", methods=["GET"])
 def home():
-
-    result = None
-    result_class = ""
-    result_icon = ""
-    confidence = 50.0
-
-    cgpa = ""
-    resume_score = ""
-    error = None
-
-    if request.method == "POST":
-
-        try:
-
-            # ------------------------------------------------
-            # GET INPUT VALUES
-            # ------------------------------------------------
-
-            cgpa = float(request.form.get("cgpa", 0))
-            resume_score = float(
-                request.form.get("resume_score", 0)
-            )
-
-
-            # ------------------------------------------------
-            # VALIDATION
-            # ------------------------------------------------
-
-            if cgpa < 0 or cgpa > 10:
-
-                raise ValueError(
-                    "CGPA must be between 0 and 10."
-                )
-
-            if resume_score < 0 or resume_score > 100:
-
-                raise ValueError(
-                    "Resume Score must be between 0 and 100."
-                )
-
-
-            # ------------------------------------------------
-            # MODEL INPUT
-            #
-            # Exact feature order of your Perceptron:
-            #
-            # 1. cgpa
-            # 2. resume_score
-            # ------------------------------------------------
-
-            features = [
-                [cgpa, resume_score]
-            ]
-
-
-            # ------------------------------------------------
-            # PERCEPTRON PREDICTION
-            # ------------------------------------------------
-
-            prediction = model.predict(features)[0]
-
-
-            # ------------------------------------------------
-            # PERCEPTRON SCORE
-            # ------------------------------------------------
-
-            if hasattr(model, "decision_function"):
-
-                decision = float(
-                    model.decision_function(
-                        features
-                    )[0]
-                )
-
-                # Convert decision score into a
-                # probability-like visual score.
-
-                try:
-
-                    visual_score = (
-                        1.0 /
-                        (
-                            1.0 +
-                            math.exp(-max(
-                                -50,
-                                min(50, decision)
-                            ))
-                        )
-                    )
-
-                    confidence = round(
-                        visual_score * 100,
-                        2
-                    )
-
-                except Exception:
-
-                    confidence = 50.0
-
-            else:
-
-                decision = 0.0
-                confidence = 50.0
-
-
-            # ------------------------------------------------
-            # RESULT
-            #
-            # Your model has classes [0, 1].
-            # Here:
-            # 1 = Positive / Selected
-            # 0 = Negative / Not Selected
-            # ------------------------------------------------
-
-            if int(prediction) == 1:
-
-                result = "Class 1 • Positive Prediction"
-
-                result_class = "positive"
-
-                result_icon = "✓"
-
-            else:
-
-                result = "Class 0 • Negative Prediction"
-
-                result_class = "negative"
-
-                result_icon = "×"
-
-
-        except ValueError as e:
-
-            error = str(e)
-
-        except Exception as e:
-
-            error = (
-                "Prediction error: "
-                + str(e)
-            )
-
-
-    # ========================================================
-    # RENDER PAGE
-    # ========================================================
 
     return render_template_string(
         HTML,
-        result=result,
-        result_class=result_class,
-        result_icon=result_icon,
-        confidence=confidence,
-        cgpa=cgpa,
-        resume_score=resume_score,
-        error=error
+        result=None,
+        result_class="",
+        result_icon="",
+        cgpa="",
+        resume_score="",
+        error=None
     )
 
 
 # ============================================================
-# LOCAL RUN
+# PREDICTION ROUTE
+# ============================================================
+
+@app.route("/predict", methods=["POST"])
+def predict():
+
+    try:
+
+        # ----------------------------------------------------
+        # GET USER INPUT
+        # ----------------------------------------------------
+
+        cgpa = float(
+            request.form.get("cgpa", "")
+        )
+
+        resume_score = float(
+            request.form.get("resume_score", "")
+        )
+
+
+        # ----------------------------------------------------
+        # VALIDATION
+        # ----------------------------------------------------
+
+        if cgpa < 0 or cgpa > 10:
+
+            return render_template_string(
+                HTML,
+                result=None,
+                result_class="",
+                result_icon="",
+                cgpa=cgpa,
+                resume_score=resume_score,
+                error="CGPA must be between 0 and 10."
+            )
+
+
+        if resume_score < 0 or resume_score > 100:
+
+            return render_template_string(
+                HTML,
+                result=None,
+                result_class="",
+                result_icon="",
+                cgpa=cgpa,
+                resume_score=resume_score,
+                error="Resume Score must be between 0 and 100."
+            )
+
+
+        # ----------------------------------------------------
+        # MODEL FEATURES
+        #
+        # Your Perceptron expects:
+        #
+        # 1. cgpa
+        # 2. resume_score
+        # ----------------------------------------------------
+
+        features = [
+            [cgpa, resume_score]
+        ]
+
+
+        # ----------------------------------------------------
+        # PREDICTION
+        # ----------------------------------------------------
+
+        prediction = model.predict(features)[0]
+
+
+        # ----------------------------------------------------
+        # PLACEMENT RESULT
+        #
+        # Assumption:
+        #
+        # 1 = Placed
+        # 0 = Unplaced
+        # ----------------------------------------------------
+
+        if int(prediction) == 1:
+
+            result = "PLACED"
+
+            result_class = "placed"
+
+            result_icon = "✓"
+
+        else:
+
+            result = "UNPLACED"
+
+            result_class = "unplaced"
+
+            result_icon = "×"
+
+
+        # ----------------------------------------------------
+        # SHOW RESULT
+        # ----------------------------------------------------
+
+        return render_template_string(
+            HTML,
+            result=result,
+            result_class=result_class,
+            result_icon=result_icon,
+            cgpa=cgpa,
+            resume_score=resume_score,
+            error=None
+        )
+
+
+    except ValueError:
+
+        return render_template_string(
+            HTML,
+            result=None,
+            result_class="",
+            result_icon="",
+            cgpa="",
+            resume_score="",
+            error="Please enter valid numeric values."
+        )
+
+
+    except Exception as e:
+
+        return render_template_string(
+            HTML,
+            result=None,
+            result_class="",
+            result_icon="",
+            cgpa="",
+            resume_score="",
+            error="Prediction error: " + str(e)
+        )
+
+
+# ============================================================
+# RUN APPLICATION
 # ============================================================
 
 if __name__ == "__main__":
